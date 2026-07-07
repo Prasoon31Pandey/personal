@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Dr. Sakshi</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,600&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://meet.jit.si/external_api.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --bg:#fff7f8; --bg-card:#ffffff; --blush:#ffe3ea; --blush-deep:#ffc9d7;
+  --wine:#a52c53; --wine-dark:#6d1c38; --gold:#cf9b45; --text:#3a1f2b; --text-soft:#8d6572;
+  --line:#f3d9e0; --good:#4a9d6f; --shadow:0 10px 30px rgba(165,44,83,.10);
+}
+body[data-theme="dark"]{
+  --bg:#1b1014; --bg-card:#26161c; --blush:#3a1f2a; --blush-deep:#4b2534;
+  --wine:#e8628a; --wine-dark:#ffb8cd; --gold:#e8bd77; --text:#f6e7ec; --text-soft:#cf9fae;
+  --line:#3e2530; --good:#6fcf97; --shadow:0 10px 30px rgba(0,0,0,.45);
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'Poppins',sans-serif;transition:background .4s,color .4s;}
+h1,h2,h3,.display{font-family:'Playfair Display',serif;}
+.wrap{max-width:1120px;margin:0 auto;padding:0 20px;}
+::-webkit-scrollbar{width:8px;}::-webkit-scrollbar-thumb{background:var(--blush-deep);border-radius:10px;}
+nav,section.view{display:none;}
+body.logged-in nav,body.logged-in section.view.active{display:block;}
+body.logged-in nav{display:block;}
+
+/* ---------- login gate ---------- */
+#loginGate{position:fixed;inset:0;background:linear-gradient(160deg,var(--bg),var(--blush));display:flex;align-items:center;justify-content:center;z-index:100;padding:20px;}
+body.logged-in #loginGate{display:none;}
+.login-box{background:var(--bg-card);border-radius:24px;padding:44px;max-width:520px;width:100%;box-shadow:0 20px 60px rgba(165,44,83,.18);text-align:center;animation:rise .5s ease both;}
+.login-box .dot-brand{font-family:'Playfair Display',serif;font-size:28px;color:var(--wine-dark);font-weight:700;margin-bottom:6px;}
+.login-box p{color:var(--text-soft);font-size:13.5px;margin-bottom:26px;}
+.role-cards{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;}
+.role-card{flex:1;min-width:190px;border:2px solid var(--line);border-radius:18px;padding:22px 16px;cursor:pointer;transition:.25s;background:var(--bg);}
+.role-card:hover{border-color:var(--wine);transform:translateY(-3px);box-shadow:var(--shadow);}
+.role-card .emoji{font-size:34px;margin-bottom:8px;}
+.role-card h3{margin:4px 0;font-size:15.5px;color:var(--wine-dark);}
+.role-card span{font-size:11.5px;color:var(--text-soft);}
+
+#hearts{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:0;}
+.heart{position:absolute;bottom:-40px;font-size:18px;color:var(--blush-deep);opacity:.55;animation:float 14s linear infinite;}
+@keyframes float{0%{transform:translateY(0) rotate(0deg);opacity:0;}10%{opacity:.6;}100%{transform:translateY(-110vh) rotate(360deg);opacity:0;}}
+
+.pulse-divider{width:100%;height:40px;margin:6px 0 22px;}
+.pulse-divider svg{width:100%;height:100%;}
+.pulse-divider path{fill:none;stroke:var(--wine);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:400;stroke-dashoffset:400;animation:draw 2.6s ease-out forwards infinite;}
+@keyframes draw{0%{stroke-dashoffset:400;}60%{stroke-dashoffset:0;}100%{stroke-dashoffset:-400;}}
+
+nav{position:sticky;top:0;z-index:30;background:rgba(255,247,248,.88);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);}
+body[data-theme="dark"] nav{background:rgba(27,16,20,.88);}
+.navrow{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;max-width:1120px;margin:0 auto;gap:12px;flex-wrap:wrap;}
+.brand{display:flex;align-items:center;gap:10px;font-family:'Playfair Display',serif;font-weight:700;font-size:20px;color:var(--wine-dark);}
+.brand .dot{width:9px;height:9px;border-radius:50%;background:var(--wine);box-shadow:0 0 0 4px var(--blush);}
+.tabs{display:flex;gap:3px;flex-wrap:wrap;}
+.tab-btn{border:none;background:transparent;padding:7px 11px;border-radius:999px;font-size:12px;color:var(--text-soft);cursor:pointer;transition:.25s;font-weight:500;white-space:nowrap;}
+.tab-btn:hover{background:var(--blush);color:var(--wine-dark);}
+.tab-btn.active{background:var(--wine);color:#fff;box-shadow:var(--shadow);}
+.nav-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.clock-widget{font-size:11.5px;color:var(--text-soft);background:var(--blush);padding:6px 11px;border-radius:999px;font-weight:600;min-width:140px;text-align:center;}
+.icon-btn{border:1px solid var(--line);background:var(--bg-card);width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:.2s;}
+.icon-btn:hover{transform:scale(1.08);border-color:var(--wine);}
+.role-badge{border:1px solid var(--wine);color:var(--wine);padding:6px 12px;border-radius:999px;font-size:11.5px;font-weight:700;}
+.mode-btn{border:1px solid var(--line);background:transparent;color:var(--text-soft);padding:6px 12px;border-radius:999px;font-size:11.5px;font-weight:600;cursor:pointer;transition:.2s;}
+.mode-btn:hover{background:var(--blush);}
+
+section.view{padding:30px 0 70px;position:relative;z-index:1;animation:rise .5s ease both;}
+@keyframes rise{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+
+.hero{display:grid;grid-template-columns:1.1fr .9fr;gap:36px;align-items:center;padding:36px 0 10px;}
+@media(max-width:800px){.hero{grid-template-columns:1fr;}}
+.eyebrow{letter-spacing:3px;font-size:11px;color:var(--gold);font-weight:600;text-transform:uppercase;}
+.hero h1{font-size:38px;line-height:1.15;margin:10px 0 14px;color:var(--wine-dark);}
+.hero h1 em{color:var(--wine);font-style:italic;}
+.hero p.quote{font-style:italic;color:var(--text-soft);font-size:16px;border-left:3px solid var(--blush-deep);padding-left:14px;margin-bottom:22px;min-height:48px;}
+.love-line{font-size:13.5px;color:var(--wine);font-weight:600;margin-bottom:18px;display:flex;align-items:center;gap:6px;}
+.cta{display:inline-flex;align-items:center;gap:8px;background:var(--wine);color:#fff;border:none;padding:12px 24px;border-radius:999px;font-size:14px;font-weight:600;cursor:pointer;box-shadow:var(--shadow);transition:.25s;}
+.cta:hover{transform:translateY(-2px);background:var(--wine-dark);}
+.countdown-row{display:flex;gap:12px;margin-top:22px;}
+.cbox{background:var(--bg-card);border:1px solid var(--line);border-radius:14px;padding:10px 14px;text-align:center;min-width:56px;box-shadow:var(--shadow);}
+.cbox b{font-size:22px;color:var(--wine);display:block;font-family:'Playfair Display',serif;}
+.cbox span{font-size:10px;color:var(--text-soft);text-transform:uppercase;letter-spacing:1px;}
+
+.illustration-holder{display:flex;justify-content:center;}
+.doctor-figure{width:250px;animation:bob 4.5s ease-in-out infinite;}
+@keyframes bob{0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);}}
+.heart-pop{transform-origin:center;animation:pop 1.6s ease-in-out infinite;}
+@keyframes pop{0%,100%{transform:scale(1);}50%{transform:scale(1.18);}}
+.photo-frame{width:260px;background:var(--bg-card);border:8px solid #fff;border-radius:18px;box-shadow:0 14px 40px rgba(165,44,83,.20);overflow:hidden;animation:bob 4.5s ease-in-out infinite;}
+body[data-theme="dark"] .photo-frame{border-color:var(--bg-card);}
+.photo-frame img{width:100%;display:block;border-radius:10px;}
+.butterfly-deco{position:absolute;font-size:22px;animation:flutter 3.4s ease-in-out infinite;pointer-events:none;}
+.bd1{top:-14px;left:-18px;animation-delay:.2s;}
+.bd2{top:20px;right:-22px;animation-delay:.9s;font-size:16px;}
+.bd3{bottom:10px;left:-24px;animation-delay:1.6s;font-size:14px;}
+@keyframes flutter{0%,100%{transform:translateY(0) rotate(-6deg);}50%{transform:translateY(-10px) rotate(8deg);}}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px;margin-top:10px;}
+.card{background:var(--bg-card);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:var(--shadow);transition:.25s;}
+.card:hover{transform:translateY(-3px);}
+.card h3{margin:0 0 6px;font-size:14.5px;color:var(--wine-dark);}
+.card p{color:var(--text-soft);font-size:12px;margin:0 0 12px;}
+.progress-track{height:9px;background:var(--blush);border-radius:99px;overflow:hidden;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--wine),var(--gold));border-radius:99px;transition:width 1s ease;}
+
+.love-meter{background:var(--bg-card);border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:var(--shadow);margin-top:18px;}
+.love-meter h3{margin:0 0 4px;color:var(--wine-dark);font-size:15px;}
+.love-meter .lvl{font-size:12px;color:var(--text-soft);margin-bottom:10px;}
+.love-bar{height:16px;background:var(--blush);border-radius:99px;overflow:hidden;position:relative;}
+.love-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--wine),var(--wine-dark));border-radius:99px;transition:width 1.2s ease;animation:glow 2.4s ease-in-out infinite;}
+@keyframes glow{0%,100%{filter:brightness(1);}50%{filter:brightness(1.15);}}
+
+.section-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:8px;}
+.section-title h2{color:var(--wine-dark);margin:0;font-size:23px;}
+.pill-note{font-size:11.5px;color:var(--text-soft);background:var(--blush);padding:5px 12px;border-radius:999px;}
+
+.cat-tabs,.subject-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0;}
+.cat-btn,.subj-btn{border:1px solid var(--line);background:var(--bg-card);padding:8px 15px;border-radius:12px;font-size:12.5px;cursor:pointer;color:var(--text-soft);font-weight:500;}
+.cat-btn.active,.subj-btn.active{background:var(--wine-dark);color:#fff;border-color:var(--wine-dark);}
+
+.uploader,.test-card,.add-form{background:var(--bg-card);border:2px dashed var(--blush-deep);border-radius:18px;padding:20px;box-shadow:var(--shadow);}
+.test-card{border:1px solid var(--line);}
+.uploader h3,.add-form h3{margin:0 0 12px;font-size:14.5px;color:var(--wine-dark);}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+input[type=text],input[type=url],input[type=number],input[type=time],select,textarea{
+  border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-family:inherit;font-size:13px;background:var(--bg);color:var(--text);
+}
+textarea{width:100%;resize:vertical;}
+input[type=file]{font-size:12.5px;color:var(--text-soft);}
+.btn{background:var(--wine);color:#fff;border:none;padding:9px 17px;border-radius:10px;font-size:13px;cursor:pointer;font-weight:600;transition:.2s;}
+.btn:hover{background:var(--wine-dark);transform:translateY(-1px);}
+.btn.ghost{background:transparent;color:var(--wine);border:1px solid var(--wine);}
+.btn.danger{background:transparent;color:#c14a35;border:1px solid #e6b3a4;}
+.btn.small{padding:6px 12px;font-size:11.5px;}
+
+.file-list{margin-top:20px;display:flex;flex-direction:column;gap:10px;}
+.file-item{background:var(--bg-card);border:1px solid var(--line);border-radius:14px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;animation:rise .4s ease both;}
+.file-info{display:flex;flex-direction:column;gap:2px;}
+.file-info b{font-size:13.5px;color:var(--text);}
+.file-info span{font-size:11px;color:var(--text-soft);}
+.tag{font-size:10px;padding:3px 9px;border-radius:99px;background:var(--blush);color:var(--wine-dark);font-weight:600;letter-spacing:.3px;}
+.file-actions{display:flex;gap:6px;flex-wrap:wrap;}
+.empty-state{text-align:center;padding:36px 10px;color:var(--text-soft);}
+.answer-box{margin-top:8px;background:var(--blush);border-radius:10px;padding:10px 12px;font-size:12.5px;}
+.check-round{width:20px;height:20px;border-radius:50%;border:2px solid var(--wine);cursor:pointer;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;background:transparent;transition:.2s;}
+.check-round.on{background:var(--good);border-color:var(--good);}
+
+.modal-bg{position:fixed;inset:0;background:rgba(20,10,14,.55);display:none;align-items:center;justify-content:center;z-index:50;padding:20px;}
+.modal-bg.show{display:flex;}
+.modal{background:var(--bg-card);border-radius:18px;max-width:720px;width:100%;max-height:85vh;overflow:auto;padding:26px;box-shadow:0 20px 60px rgba(0,0,0,.35);}
+.modal h3{margin-top:0;color:var(--wine-dark);}
+.modal iframe,.modal img{width:100%;border-radius:10px;border:1px solid var(--line);}
+.close-x{float:right;background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-soft);}
+
+.chapter-row,.timeslot-row{display:flex;align-items:center;gap:12px;background:var(--bg-card);border:1px solid var(--line);border-radius:14px;padding:12px 16px;margin-bottom:8px;flex-wrap:wrap;animation:rise .4s ease both;}
+.chapter-row.complete,.timeslot-row.done{background:linear-gradient(90deg,rgba(74,157,111,.12),transparent);border-color:#bfe3cd;}
+.chapter-name{flex:1;min-width:140px;font-size:13.5px;font-weight:500;}
+.chapter-name.done{text-decoration:line-through;color:var(--text-soft);}
+.mini-checks{display:flex;gap:6px;font-size:10.5px;}
+.mini-chip{padding:5px 9px;border-radius:8px;border:1px solid var(--line);cursor:pointer;color:var(--text-soft);background:var(--bg);}
+.mini-chip.on{background:var(--good);color:#fff;border-color:var(--good);}
+.time-chip{font-family:'Playfair Display',serif;font-weight:700;color:var(--wine);font-size:14px;min-width:110px;}
+
+.test-card .qform{border-top:1px dashed var(--line);margin-top:14px;padding-top:14px;}
+.opt-row{display:flex;align-items:center;gap:8px;margin:6px 0;}
+.opt-row input[type=text]{flex:1;}
+.timer-badge{position:sticky;top:66px;z-index:5;display:inline-flex;align-items:center;gap:8px;background:var(--wine-dark);color:#fff;padding:10px 20px;border-radius:999px;font-size:15px;font-weight:600;box-shadow:var(--shadow);}
+.timer-badge.warn{background:#c14a35;animation:blink 1s infinite;}
+@keyframes blink{50%{opacity:.55;}}
+.q-live{background:var(--bg-card);border:1px solid var(--line);border-radius:16px;padding:20px;margin:18px 0;box-shadow:var(--shadow);}
+.q-live .qnum{font-size:11px;color:var(--gold);font-weight:700;letter-spacing:1px;text-transform:uppercase;}
+.q-opt{display:block;width:100%;text-align:left;background:var(--bg);border:1px solid var(--line);padding:11px 14px;border-radius:10px;margin:7px 0;cursor:pointer;font-size:13.5px;transition:.15s;color:var(--text);}
+.q-opt:hover{border-color:var(--wine);}
+.q-opt.selected{background:var(--blush);border-color:var(--wine);font-weight:600;}
+.q-opt.correct{background:#e5f5ec;border-color:var(--good);color:#234;}
+.q-opt.wrong{background:#fbe7e2;border-color:#c14a35;color:#234;}
+.result-card{text-align:center;padding:30px;}
+.result-card .score{font-size:48px;color:var(--wine);font-family:'Playfair Display',serif;font-weight:700;}
+
+.pomo{background:var(--bg-card);border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:var(--shadow);text-align:center;margin-top:18px;}
+.pomo .time{font-size:44px;font-family:'Playfair Display',serif;color:var(--wine);font-weight:700;}
+.pomo .label{font-size:12px;color:var(--text-soft);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;}
+
+.video-wrap{background:var(--bg-card);border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:var(--shadow);}
+#jitsi-container{width:100%;height:520px;border-radius:14px;overflow:hidden;background:#1a0d13;}
+
+.streak-box{display:flex;gap:16px;flex-wrap:wrap;}
+.streak-num{background:var(--bg-card);border:1px solid var(--line);border-radius:18px;padding:22px;text-align:center;flex:1;min-width:150px;box-shadow:var(--shadow);}
+.streak-num b{font-size:36px;color:var(--wine);font-family:'Playfair Display',serif;display:block;}
+.streak-num span{font-size:11.5px;color:var(--text-soft);text-transform:uppercase;letter-spacing:1px;}
+.badge-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-top:16px;}
+.badge{background:var(--bg-card);border:1px solid var(--line);border-radius:16px;padding:16px;text-align:center;opacity:.4;filter:grayscale(1);transition:.3s;}
+.badge.unlocked{opacity:1;filter:none;box-shadow:var(--shadow);animation:pop 2s ease-in-out infinite;}
+.badge .emoji{font-size:30px;}
+.badge h4{margin:6px 0 2px;font-size:12.5px;color:var(--wine-dark);}
+.badge span{font-size:10px;color:var(--text-soft);}
+
+.mistake-item{background:var(--bg-card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:10px;}
+.mistake-item b{color:var(--wine-dark);}
+.mistake-item .lbl{font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--gold);font-weight:700;margin-top:6px;}
+
+#confettiLayer{position:fixed;inset:0;pointer-events:none;z-index:80;}
+.confetti-bit{position:absolute;font-size:16px;animation:confetti-fall 1.2s ease-out forwards;}
+@keyframes confetti-fall{0%{transform:translateY(0) rotate(0);opacity:1;}100%{transform:translateY(220px) rotate(360deg);opacity:0;}}
+
+.admin-only{}
+body.student-mode .admin-only{display:none !important;}
+
+footer{text-align:center;padding:28px 0;color:var(--text-soft);font-size:12px;}
+</style>
+</head>
+<body>
+
+<!-- ================= LOGIN GATE ================= -->
+<div id="loginGate">
+  <div class="login-box">
+    <div class="dot-brand">🩺 Dr. Sakshi</div>
+    <p>Login karo apne role se — dono ka view alag hai.</p>
+    <div class="role-cards">
+      <div class="role-card" onclick="loginAsAdmin()">
+        <div class="emoji">👨‍⚕️</div>
+        <h3>Admin</h3>
+        <span>Upload, edit, delete — sab kuch control karo</span>
+      </div>
+      <div class="role-card" onclick="loginAsStudent()">
+        <div class="emoji">👩‍⚕️</div>
+        <h3>Sakshi</h3>
+        <span>Timetable, notes, syllabus, DPP dekho aur complete karo</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="hearts"></div>
+<div id="confettiLayer"></div>
+
+<nav>
+  <div class="navrow">
+    <div class="brand"><span class="dot"></span> Dr. Sakshi</div>
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="home">Home</button>
+      <button class="tab-btn" data-tab="timetable">Timetable</button>
+      <button class="tab-btn" data-tab="syllabus">Syllabus</button>
+      <button class="tab-btn" data-tab="dpp">DPP</button>
+      <button class="tab-btn" data-tab="notes">Notes</button>
+      <button class="tab-btn" data-tab="progress">Progress</button>
+      <button class="tab-btn admin-only" data-tab="upload">Upload Center</button>
+      <button class="tab-btn" data-tab="test">Weekly Test</button>
+      <button class="tab-btn" data-tab="video">Video Call</button>
+    </div>
+    <div class="nav-tools">
+      <div class="clock-widget" id="clockWidget">--:--:--</div>
+      <button class="icon-btn" id="themeBtn" onclick="toggleTheme()" title="Dark / Light mode">🌙</button>
+      <span class="role-badge" id="roleBadge">Admin</span>
+      <button class="mode-btn" onclick="logout()">Logout</button>
+    </div>
+  </div>
+</nav>
+
+<!-- ============ HOME ============ -->
+<section class="view active" id="home">
+  <div class="wrap">
+    <div class="hero">
+      <div>
+        <div class="eyebrow">Future MBBS · NEET 2027</div>
+        <h1>Every chapter today<br>brings <em>Dr. Sakshi</em> one<br>step closer.</h1>
+        <p class="quote" id="quoteText">Loading today's motivation…</p>
+        <div class="love-line">💞 Main tumhare saath hu, hamesha — jitna tum aage badhogi, utna hamara pyaar bhi badhega.</div>
+        <button class="cta" onclick="switchTab('timetable')">✦ See Today's Timetable</button>
+        <div class="countdown-row" id="countdownRow"></div>
+      </div>
+      <div class="illustration-holder">
+        <div style="position:relative;">
+          <span class="butterfly-deco bd1">🦋</span><span class="butterfly-deco bd2">🦋</span><span class="butterfly-deco bd3">🦋</span>
+          <div class="photo-frame" id="photoFrame">
+            <svg class="doctor-figure" viewBox="0 0 260 320" xmlns="http://www.w3.org/2000/svg">
+              <ellipse cx="130" cy="300" rx="90" ry="14" fill="#ffc9d7" opacity=".5"/>
+              <path d="M70 140 Q65 250 80 300 L180 300 Q195 250 190 140 Z" fill="#ffffff" stroke="#e9c3ce" stroke-width="2"/>
+              <path d="M70 140 Q130 165 190 140 L190 160 Q130 185 70 160 Z" fill="#f7dfe6"/>
+              <rect x="122" y="150" width="16" height="130" fill="#a52c53" opacity=".15"/>
+              <circle cx="130" cy="95" r="42" fill="#f6c6a5"/>
+              <path d="M90 85 Q130 40 170 85 Q172 55 130 48 Q88 55 90 85Z" fill="#3a1f2b"/>
+              <circle cx="114" cy="98" r="3.2" fill="#3a1f2b"/>
+              <circle cx="146" cy="98" r="3.2" fill="#3a1f2b"/>
+              <path d="M116 112 Q130 120 144 112" stroke="#3a1f2b" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+              <path d="M108 128 Q130 138 152 128 L152 140 Q130 150 108 140 Z" fill="#a52c53"/>
+              <path d="M100 150 Q130 130 100 118 Q90 130 100 150" fill="none" stroke="#cf9b45" stroke-width="3" stroke-linecap="round"/>
+              <circle cx="100" cy="118" r="6" fill="#cf9b45"/>
+              <circle cx="245" cy="70" r="13" class="heart-pop" fill="#a52c53"/>
+              <text x="238" y="75" font-size="13" fill="#fff">❤</text>
+            </svg>
+          </div>
+          <p id="photoCaption" style="text-align:center;color:var(--text-soft);font-size:11.5px;margin-top:8px;"></p>
+          <div class="row admin-only" style="justify-content:center;margin-top:8px;">
+            <input type="file" id="dailyPhotoFile" accept="image/*" style="display:none;" onchange="uploadDailyPhoto()">
+            <button class="btn ghost small" onclick="document.getElementById('dailyPhotoFile').click()">📷 Upload Today's Photo</button>
+            <button class="btn danger small" onclick="removeDailyPhoto()">🗑 Remove</button>
+          </div>
+          <div class="row" style="justify-content:center;margin-top:6px;" id="photoDownloadRow"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pulse-divider"><svg viewBox="0 0 800 40" preserveAspectRatio="none"><path d="M0 20 L200 20 L225 3 L245 37 L268 20 L800 20"/></svg></div>
+
+    <div class="grid">
+      <div class="card"><h3>📚 Overall Syllabus</h3><p id="homeSyllabusText">Nothing added yet</p><div class="progress-track"><div class="progress-fill" id="homeSyllabusBar" style="width:0%"></div></div></div>
+      <div class="card"><h3>🗓️ Today's Timetable</h3><p id="homePlanText">No slots set for today</p><div class="progress-track"><div class="progress-fill" id="homePlanBar" style="width:0%"></div></div></div>
+      <div class="card"><h3>📝 Daily DPP</h3><p id="homeDppText">Nothing uploaded yet</p><div class="progress-track"><div class="progress-fill" id="homeDppBar" style="width:0%"></div></div></div>
+      <div class="card"><h3>🏆 Weekly Tests Taken</h3><p id="homeTestText">0 tests completed</p><div class="progress-track"><div class="progress-fill" id="homeTestBar" style="width:0%"></div></div></div>
+    </div>
+
+    <div class="love-meter">
+      <h3>💞 Our Love Meter</h3>
+      <div class="lvl" id="loveLvl">Level 1 — Just getting started</div>
+      <div class="love-bar"><div class="love-fill" id="loveFill" style="width:5%"></div></div>
+    </div>
+
+    <div class="pomo">
+      <div class="label">Focus Timer</div>
+      <div class="time" id="pomoTime">25:00</div>
+      <div class="row" style="justify-content:center;margin-top:12px;">
+        <button class="btn" onclick="pomoStart()">▶ Start</button>
+        <button class="btn ghost" onclick="pomoPause()">⏸ Pause</button>
+        <button class="btn ghost" onclick="pomoReset()">↺ Reset</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TIMETABLE ============ -->
+<section class="view" id="timetable">
+  <div class="wrap">
+    <div class="section-title"><h2>Today's Timetable</h2><span class="pill-note">Synced for both</span></div>
+    <div class="add-form admin-only">
+      <h3>Add a Time Slot</h3>
+      <div class="row">
+        <input type="text" id="slotTime" placeholder="Time e.g. 6:00 AM - 7:00 AM" style="min-width:200px;">
+        <select id="slotSubject"><option>Biology</option><option>Physics</option><option>Chemistry</option><option>Revision</option><option>Break</option><option>General</option></select>
+        <input type="text" id="slotTask" placeholder="Task (e.g. NCERT Ch.12 reading)" style="min-width:220px;">
+        <button class="btn" onclick="addSlot()">+ Add Slot</button>
+      </div>
+    </div>
+    <div id="slotList" style="margin-top:18px;"></div>
+  </div>
+</section>
+
+<!-- ============ SYLLABUS ============ -->
+<section class="view" id="syllabus">
+  <div class="wrap">
+    <div class="section-title"><h2>Syllabus Tracker</h2><span class="pill-note">Chapter-wise progress</span></div>
+    <div class="subject-tabs" id="subjTabs"></div>
+    <div class="card" style="margin-bottom:16px;">
+      <div class="progress-track" style="height:12px;"><div class="progress-fill" id="subjBar" style="width:0%"></div></div>
+      <p id="subjBarText" style="margin:8px 0 0;color:var(--text-soft);font-size:12.5px;">0 of 0 chapters complete</p>
+    </div>
+    <div class="add-form admin-only" style="margin-bottom:18px;">
+      <h3>Add Chapter</h3>
+      <div class="row"><input type="text" id="chapterName" placeholder="Chapter name" style="min-width:260px;"><button class="btn" onclick="addChapter()">+ Add Chapter</button></div>
+    </div>
+    <div id="chapterList"></div>
+  </div>
+</section>
+
+<!-- ============ DPP ============ -->
+<section class="view" id="dpp">
+  <div class="wrap">
+    <div class="section-title"><h2>Daily DPP</h2><span class="pill-note">Practice problems</span></div>
+    <div class="subject-tabs" id="dppSubjTabs"></div>
+    <div class="card" style="margin-bottom:16px;">
+      <div class="progress-track" style="height:12px;"><div class="progress-fill" id="dppSubjBar" style="width:0%"></div></div>
+      <p id="dppSubjBarText" style="margin:8px 0 0;color:var(--text-soft);font-size:12.5px;">0 of 0 DPPs complete</p>
+    </div>
+    <div class="uploader admin-only">
+      <h3>Upload New DPP</h3>
+      <div class="row" style="margin-bottom:10px;">
+        <input type="text" id="dppTitle" placeholder="Title e.g. Biology DPP 12" style="min-width:220px;">
+        <select id="dppSubject"><option>Biology</option><option>Physics</option><option>Chemistry</option></select>
+      </div>
+      <div class="row" style="margin-bottom:10px;">
+        <input type="file" id="dppFile"><span style="color:var(--text-soft);font-size:12px;">— or —</span>
+        <input type="url" id="dppLink" placeholder="Paste link instead" style="min-width:220px;">
+      </div>
+      <div class="row"><button class="btn" onclick="addDpp()">⬆ Upload DPP</button><span id="dppMsg" style="font-size:12px;color:var(--text-soft);"></span></div>
+    </div>
+    <div class="file-list" id="dppList"></div>
+  </div>
+</section>
+
+<!-- ============ NOTES LIBRARY ============ -->
+<section class="view" id="notes">
+  <div class="wrap">
+    <div class="section-title"><h2>Notes Library</h2><span class="pill-note">Subject-wise</span></div>
+    <div class="subject-tabs" id="notesSubjTabs"></div>
+    <div id="notesList" style="margin-top:16px;"></div>
+  </div>
+</section>
+
+<!-- ============ PROGRESS & REWARDS ============ -->
+<section class="view" id="progress">
+  <div class="wrap">
+    <div class="section-title"><h2>Progress &amp; Rewards</h2><span class="pill-note">Streak · Badges · Mistakes</span></div>
+
+    <div class="streak-box">
+      <div class="streak-num"><b id="streakCount">0</b><span>🔥 Day Streak</span></div>
+      <div class="streak-num"><b id="totalActiveDays">0</b><span>📅 Active Days</span></div>
+      <div class="streak-num"><b id="totalChaptersDone">0</b><span>✅ Chapters Done</span></div>
+    </div>
+
+    <h3 style="color:var(--wine-dark);margin-top:26px;">Achievements</h3>
+    <div class="badge-grid" id="badgeGrid"></div>
+
+    <h3 style="color:var(--wine-dark);margin-top:30px;">Mistake Notebook</h3>
+    <div class="add-form" style="margin-bottom:16px;">
+      <h3>Add a Mistake</h3>
+      <div class="row" style="margin-bottom:8px;"><textarea id="mistakeQ" placeholder="Wrong question" rows="2" style="width:100%;"></textarea></div>
+      <div class="row" style="margin-bottom:8px;"><textarea id="mistakeSol" placeholder="Correct solution" rows="2" style="width:100%;"></textarea></div>
+      <div class="row" style="margin-bottom:8px;"><input type="text" id="mistakeReason" placeholder="Reason for mistake (e.g. silly calculation error)" style="width:100%;"></div>
+      <button class="btn" onclick="addMistake()">+ Add to Notebook</button>
+    </div>
+    <div id="mistakeList"></div>
+  </div>
+</section>
+
+<!-- ============ UPLOAD CENTER ============ -->
+<section class="view" id="upload">
+  <div class="wrap">
+    <div class="section-title"><h2>Upload Center</h2><span class="pill-note">Admin only 💕</span></div>
+    <p style="color:var(--text-soft);font-size:13px;max-width:640px;">
+      Chhoti files (~3MB tak) seedha upload ho jayengi. Bade PDFs ke liye <b>link paste</b> karo — size limit nahi hoga.
+    </p>
+    <div class="cat-tabs" id="catTabs"></div>
+    <div class="uploader admin-only">
+      <h3 id="uploaderTitle">Add to Syllabus</h3>
+      <div class="row" style="margin-bottom:10px;">
+        <input type="text" id="itemTitle" placeholder="Title" style="min-width:220px;">
+        <select id="itemSubject"><option value="General">General</option><option value="Biology">Biology</option><option value="Physics">Physics</option><option value="Chemistry">Chemistry</option></select>
+      </div>
+      <div class="row" style="margin-bottom:10px;">
+        <input type="file" id="itemFile"><span style="color:var(--text-soft);font-size:12px;">— or —</span>
+        <input type="url" id="itemLink" placeholder="Paste link instead" style="min-width:220px;">
+      </div>
+      <div class="row"><button class="btn" onclick="addItem()">⬆ Upload</button><span id="uploadMsg" style="font-size:12px;color:var(--text-soft);"></span></div>
+    </div>
+    <div class="file-list" id="fileList"></div>
+  </div>
+</section>
+
+<!-- ============ WEEKLY TEST ============ -->
+<section class="view" id="test">
+  <div class="wrap">
+    <div class="section-title"><h2>Weekly Test</h2><span class="pill-note">NEET-style · Timed</span></div>
+    <div id="testBuilder">
+      <div class="test-card admin-only">
+        <h3 style="margin-top:0;color:var(--wine-dark);">Create This Week's Test</h3>
+        <div class="row" style="margin-bottom:10px;">
+          <input type="text" id="testName" placeholder="Test name" style="min-width:260px;">
+          <input type="number" id="testMinutes" placeholder="Duration (mins)" value="30" style="width:120px;">
+        </div>
+        <input type="url" id="testPaperLink" placeholder="Optional: link to original question-paper PDF" style="width:100%;margin-bottom:14px;">
+        <div id="qBuilderList"></div>
+        <button class="btn ghost small" onclick="addBuilderQuestion()">+ Add Question</button>
+        <div style="margin-top:16px;"><button class="btn" onclick="saveTest()">💾 Save Test</button></div>
+      </div>
+      <h3 style="color:var(--wine-dark);margin-top:22px;">Available Tests</h3>
+      <div class="file-list" id="testList"></div>
+    </div>
+    <div id="testRunner" style="display:none;"></div>
+  </div>
+</section>
+
+<!-- ============ VIDEO CALL ============ -->
+<section class="view" id="video">
+  <div class="wrap">
+    <div class="section-title"><h2>Video Call</h2><span class="pill-note">Powered by Jitsi Meet</span></div>
+    <div class="video-wrap">
+      <div class="row" style="margin-bottom:14px;">
+        <input type="text" id="roomName" placeholder="Room name" value="dr-sakshi-love-room" style="min-width:260px;">
+        <button class="btn" onclick="startCall()">📞 Start / Join Call</button>
+        <button class="btn danger" onclick="endCall()">End Call</button>
+      </div>
+      <div id="jitsi-container"></div>
+    </div>
+  </div>
+</section>
+
+<div class="modal-bg" id="modalBg"><div class="modal"><button class="close-x" onclick="closeModal()">✕</button><div id="modalBody"></div></div></div>
+<footer>Made with 🩷 for Dr. Sakshi's NEET journey.</footer>
+
+<script>
+/* ================= STORAGE ================= */
+/* SHARED data (uploads, timetable, syllabus, dpp, tests, etc.) now goes through Supabase
+   so it syncs across different laptops/phones. PERSONAL data (theme, which role this
+   device is logged in as) stays in localStorage — that's meant to be per-device. */
+
+/* 👉 PASTE YOUR SUPABASE PROJECT DETAILS HERE (see setup steps shared separately) */
+const SUPABASE_URL = 'https://ykbbyjgjroevboxvgjmk.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_9q21AR0kuYR5gXlseLst0Q_oR4wv1Uo';
+
+let supabaseClient=null;
+if(SUPABASE_URL && SUPABASE_URL.indexOf('http')===0 && SUPABASE_ANON_KEY && SUPABASE_ANON_KEY.length>20 && window.supabase){
+  supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+}
+const hasCS=(typeof window!=='undefined' && window.storage && typeof window.storage.set==='function');
+
+function lsKey(key,shared){return 'drsakshi_'+(shared?'shared_':'local_')+key;}
+async function rawSet(key,val,shared){
+  const payload=JSON.stringify(val);
+  if(hasCS){try{const r=await window.storage.set(key,payload,shared);if(r)return true;}catch(e){console.error('CS set failed',e);}}
+  try{localStorage.setItem(lsKey(key,shared),payload);return true;}catch(e){console.error('localStorage set failed',e);return false;}
+}
+async function rawGet(key,shared,fallback){
+  if(hasCS){try{const r=await window.storage.get(key,shared);return r?JSON.parse(r.value):fallback;}catch(e){/* fall through */}}
+  try{const v=localStorage.getItem(lsKey(key,shared));return v!==null?JSON.parse(v):fallback;}catch(e){return fallback;}
+}
+
+async function sSet(key,val){
+  if(supabaseClient){
+    const{error}=await supabaseClient.from('app_data').upsert({key,value:val,updated_at:new Date().toISOString()});
+    if(error){console.error('Supabase set failed',error);return false;}
+    return true;
+  }
+  return rawSet(key,val,true);
+}
+async function sGet(key,fallback){
+  if(supabaseClient){
+    const{data,error}=await supabaseClient.from('app_data').select('value').eq('key',key).maybeSingle();
+    if(error){console.error('Supabase get failed',error);return fallback;}
+    return data?data.value:fallback;
+  }
+  return rawGet(key,true,fallback);
+}
+async function pSet(key,val){return rawSet(key,val,false);}
+async function pGet(key,fallback){return rawGet(key,false,fallback);}
+function uid(){return Math.random().toString(36).slice(2,10);}
+function escapeHtml(s){return (s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+/* ================= AMBIENT HEARTS + CONFETTI ================= */
+const heartsWrap=document.getElementById('hearts');
+const ambientSymbols=['❤','❤','❤','🦋','🦋'];
+for(let i=0;i<16;i++){const h=document.createElement('div');h.className='heart';h.textContent=ambientSymbols[i%ambientSymbols.length];h.style.left=Math.random()*100+'%';h.style.animationDelay=(Math.random()*14)+'s';h.style.fontSize=(12+Math.random()*14)+'px';heartsWrap.appendChild(h);}
+function burstConfetti(x,y){
+  const layer=document.getElementById('confettiLayer');
+  const bits=['🎉','💖','✨','🌸','💗'];
+  for(let i=0;i<16;i++){
+    const b=document.createElement('div');b.className='confetti-bit';b.textContent=bits[Math.floor(Math.random()*bits.length)];
+    b.style.left=(x+(Math.random()*120-60))+'px';b.style.top=(y)+'px';b.style.animationDelay=(Math.random()*.2)+'s';
+    layer.appendChild(b);setTimeout(()=>b.remove(),1400);
+  }
+}
+
+/* ================= LOGIN / ROLE ================= */
+function getRole(){return localStorage.getItem('drsakshi_role');}
+function setRoleLocal(r){localStorage.setItem('drsakshi_role',r);}
+function clearRoleLocal(){localStorage.removeItem('drsakshi_role');}
+
+async function loginAsAdmin(){
+  let storedPass=await sGet('auth:adminPassword',null);
+  if(!storedPass){
+    const p1=prompt('Pehli baar hai — apna Admin password set karo (yaad rakhna):');
+    if(!p1)return;
+    const ok=await sSet('auth:adminPassword',p1);
+    if(!ok){alert('Password save nahi ho paya, dobara try karo.');return;}
+    storedPass=p1;
+  }else{
+    const p=prompt('Admin password daalo:');
+    if(p===null)return;
+    if(p!==storedPass){alert('Galat password.');return;}
+  }
+  setRoleLocal('admin');
+  enterApp('admin');
+}
+function loginAsStudent(){
+  setRoleLocal('student');
+  enterApp('student');
+}
+function enterApp(role){
+  document.body.classList.add('logged-in');
+  document.body.classList.toggle('student-mode',role==='student');
+  document.getElementById('roleBadge').textContent=role==='admin'?'👨‍⚕️ Admin':'👩‍⚕️ Sakshi';
+  switchTab('home');
+  logActivity();
+}
+function logout(){clearRoleLocal();document.body.classList.remove('logged-in','student-mode');}
+
+function initAuth(){
+  const role=getRole();
+  if(role){enterApp(role);}
+}
+
+/* ================= TABS ================= */
+function switchTab(id){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  const btn=document.querySelector(`.tab-btn[data-tab="${id}"]`); if(btn)btn.classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+  if(id==='progress')renderProgressPage();
+}
+document.querySelectorAll('.tab-btn').forEach(b=>b.addEventListener('click',()=>switchTab(b.dataset.tab)));
+
+/* ================= QUOTES ================= */
+const quotes=[
+ "Every chapter you finish today brings you one step closer to wearing the white coat.",
+ "Tumhara struggle aaj, kisi ki jaan bachayega kal.",
+ "Slow progress is still progress, Dr. Sakshi.",
+ "The white coat is waiting. Keep going.",
+ "Consistency beats intensity — one revision at a time.",
+ "Main tumhare saath hu, har mushkil chapter mein bhi.",
+ "Jitna mehnat aaj, utna pyaar aur pride kal.",
+ "Tum akeli nahi ho is safar mein — main hamesha tumhare saath hu.",
+ "Ek aur DPP, ek aur kadam Dr. Sakshi banne ki taraf.",
+ "Thak jao to ruk jao, but rukna chhodna mat.",
+ "Har revision tumhe thoda aur confident banata hai.",
+ "I'm proud of you, even on the days you don't feel like studying."
+];
+document.getElementById('quoteText').textContent=quotes[Math.floor(Math.random()*quotes.length)];
+
+/* ================= CLOCK & COUNTDOWN ================= */
+function renderClock(){const now=new Date();document.getElementById('clockWidget').textContent=now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'})+' · '+now.toLocaleDateString([], {weekday:'short',day:'2-digit',month:'short'});}
+renderClock();setInterval(renderClock,1000);
+const neetDate=new Date('2027-05-03T00:00:00');
+function renderCountdown(){
+  const now=new Date();let diff=Math.max(0,neetDate-now);
+  const d=Math.floor(diff/86400000),h=Math.floor(diff/3600000)%24,m=Math.floor(diff/60000)%60,s=Math.floor(diff/1000)%60;
+  document.getElementById('countdownRow').innerHTML=[[d,'Days'],[h,'Hrs'],[m,'Min'],[s,'Sec']].map(([v,l])=>`<div class="cbox"><b>${v}</b><span>${l}</span></div>`).join('');
+}
+renderCountdown();setInterval(renderCountdown,1000);
+
+/* ================= THEME ================= */
+function initTheme(){
+  const saved=localStorage.getItem('drsakshi_theme')||'light';
+  document.body.setAttribute('data-theme',saved);
+  document.getElementById('themeBtn').textContent=saved==='dark'?'☀️':'🌙';
+}
+function toggleTheme(){
+  const cur=document.body.getAttribute('data-theme')||'light';
+  const next=cur==='dark'?'light':'dark';
+  document.body.setAttribute('data-theme',next);
+  document.getElementById('themeBtn').textContent=next==='dark'?'☀️':'🌙';
+  localStorage.setItem('drsakshi_theme',next);
+}
+
+/* ================= ACTIVITY LOG (streak) ================= */
+function todayStr(){return new Date().toISOString().slice(0,10);}
+async function logActivity(){
+  const log=await sGet('activity:log',[]);
+  const t=todayStr();
+  if(!log.includes(t)){log.push(t);await sSet('activity:log',log);}
+}
+function computeStreak(log){
+  const set=new Set(log);
+  let streak=0;let d=new Date();
+  while(true){
+    const key=d.toISOString().slice(0,10);
+    if(set.has(key)){streak++;d.setDate(d.getDate()-1);}else break;
+  }
+  return streak;
+}
+
+/* ================= TIMETABLE ================= */
+async function addSlot(){
+  const time=document.getElementById('slotTime').value.trim();
+  const subject=document.getElementById('slotSubject').value;
+  const task=document.getElementById('slotTask').value.trim();
+  if(!time||!task){alert('Time aur task dono bharo.');return;}
+  const list=await sGet('timetable:current',[]);
+  list.push({id:uid(),time,subject,task,done:false});
+  const ok=await sSet('timetable:current',list);
+  if(!ok){alert('Save fail ho gaya, dobara try karo.');return;}
+  document.getElementById('slotTime').value='';document.getElementById('slotTask').value='';
+  await logActivity();
+  renderSlots();updateHomeStats();
+}
+async function renderSlots(){
+  const list=await sGet('timetable:current',[]);
+  const wrap=document.getElementById('slotList');
+  if(!list.length){wrap.innerHTML='<div class="empty-state">Aaj ke liye koi slot add nahi hua abhi.</div>';return;}
+  wrap.innerHTML=list.map(s=>`
+    <div class="timeslot-row ${s.done?'done':''}">
+      <button class="check-round ${s.done?'on':''}" onclick="toggleSlot('${s.id}',event)">${s.done?'✓':''}</button>
+      <div class="time-chip">${escapeHtml(s.time)}</div>
+      <span class="tag">${escapeHtml(s.subject)}</span>
+      <div style="flex:1;min-width:140px;" class="${s.done?'chapter-name done':'chapter-name'}">${escapeHtml(s.task)}</div>
+      <button class="btn danger small admin-only" onclick="deleteSlot('${s.id}')">🗑</button>
+    </div>`).join('');
+}
+async function toggleSlot(id,ev){
+  const list=await sGet('timetable:current',[]);
+  const item=list.find(x=>x.id===id); if(!item)return;
+  item.done=!item.done;
+  await sSet('timetable:current',list);
+  if(item.done){await logActivity();if(ev)burstConfetti(ev.clientX,ev.clientY);}
+  renderSlots();updateHomeStats();
+}
+async function deleteSlot(id){
+  if(!confirm('Ye slot delete karna hai?'))return;
+  const list=await sGet('timetable:current',[]);
+  await sSet('timetable:current',list.filter(x=>x.id!==id));
+  renderSlots();updateHomeStats();
+}
+
+/* ================= SYLLABUS TRACKER ================= */
+const SUBJECTS=['Biology','Physics','Chemistry'];
+let activeSubject='Biology';
+function renderSubjTabs(){document.getElementById('subjTabs').innerHTML=SUBJECTS.map(s=>`<button class="subj-btn ${s===activeSubject?'active':''}" onclick="setSubject('${s}')">${s}</button>`).join('');}
+function setSubject(s){activeSubject=s;renderSubjTabs();renderChapters();}
+async function addChapter(){
+  const name=document.getElementById('chapterName').value.trim();
+  if(!name){alert('Chapter ka naam likho.');return;}
+  const list=await sGet('syllabus:'+activeSubject,[]);
+  list.push({id:uid(),name,ncert:false,notesDone:false,revised:false,complete:false});
+  const ok=await sSet('syllabus:'+activeSubject,list);
+  if(!ok){alert('Save fail ho gaya.');return;}
+  document.getElementById('chapterName').value='';
+  renderChapters();updateHomeStats();
+}
+async function renderChapters(){
+  const list=await sGet('syllabus:'+activeSubject,[]);
+  const wrap=document.getElementById('chapterList');
+  const doneCount=list.filter(c=>c.complete).length;
+  document.getElementById('subjBar').style.width=(list.length?Math.round(doneCount/list.length*100):0)+'%';
+  document.getElementById('subjBarText').textContent=`${doneCount} of ${list.length} chapters complete (${activeSubject})`;
+  if(!list.length){wrap.innerHTML='<div class="empty-state">Is subject mein abhi koi chapter add nahi hua.</div>';return;}
+  wrap.innerHTML=list.map(c=>`
+    <div class="chapter-row ${c.complete?'complete':''}">
+      <button class="check-round ${c.complete?'on':''}" onclick="toggleChapterComplete('${c.id}',event)">${c.complete?'✓':''}</button>
+      <div class="chapter-name ${c.complete?'done':''}">${escapeHtml(c.name)}</div>
+      <div class="mini-checks">
+        <span class="mini-chip ${c.ncert?'on':''}" onclick="toggleChapterField('${c.id}','ncert')">NCERT</span>
+        <span class="mini-chip ${c.notesDone?'on':''}" onclick="toggleChapterField('${c.id}','notesDone')">Notes</span>
+        <span class="mini-chip ${c.revised?'on':''}" onclick="toggleChapterField('${c.id}','revised')">Revised</span>
+      </div>
+      <button class="btn danger small admin-only" onclick="deleteChapter('${c.id}')">🗑</button>
+    </div>`).join('');
+}
+async function toggleChapterField(id,field){
+  const list=await sGet('syllabus:'+activeSubject,[]);
+  const c=list.find(x=>x.id===id); if(!c)return;
+  c[field]=!c[field];
+  await sSet('syllabus:'+activeSubject,list);
+  renderChapters();
+}
+async function toggleChapterComplete(id,ev){
+  const list=await sGet('syllabus:'+activeSubject,[]);
+  const c=list.find(x=>x.id===id); if(!c)return;
+  c.complete=!c.complete;
+  if(c.complete){c.ncert=true;c.notesDone=true;c.revised=true;await logActivity();}
+  await sSet('syllabus:'+activeSubject,list);
+  if(c.complete&&ev)burstConfetti(ev.clientX,ev.clientY);
+  renderChapters();updateHomeStats();
+}
+async function deleteChapter(id){
+  if(!confirm('Ye chapter delete karna hai?'))return;
+  const list=await sGet('syllabus:'+activeSubject,[]);
+  await sSet('syllabus:'+activeSubject,list.filter(x=>x.id!==id));
+  renderChapters();updateHomeStats();
+}
+
+/* ================= DPP ================= */
+let activeDppSubject='Biology';
+function renderDppSubjTabs(){document.getElementById('dppSubjTabs').innerHTML=SUBJECTS.map(s=>`<button class="subj-btn ${s===activeDppSubject?'active':''}" onclick="setDppSubject('${s}')">${s}</button>`).join('');}
+function setDppSubject(s){activeDppSubject=s;renderDppSubjTabs();renderDppList();}
+function fileToBase64(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file);});}
+
+async function addDpp(){
+  const title=document.getElementById('dppTitle').value.trim();
+  const subject=document.getElementById('dppSubject').value;
+  const fileInput=document.getElementById('dppFile');
+  const link=document.getElementById('dppLink').value.trim();
+  const msg=document.getElementById('dppMsg');
+  if(!title){msg.textContent='Title daalo pehle.';msg.style.color='#c14a35';return;}
+  if(!fileInput.files.length && !link){msg.textContent='File choose karo ya link paste karo.';msg.style.color='#c14a35';return;}
+  let entry={id:uid(),title,subject,ts:Date.now(),completed:false,answers:[]};
+  if(fileInput.files.length){
+    const f=fileInput.files[0];
+    if(f.size>3.2*1024*1024){msg.textContent='⚠️ File 3MB se badi hai — link use karo.';msg.style.color='#c14a35';return;}
+    msg.textContent='Uploading...';msg.style.color='var(--text-soft)';
+    try{const b64=await fileToBase64(f);entry.type='file';entry.fileName=f.name;entry.mime=f.type;entry.data=b64;}
+    catch(e){msg.textContent='Upload fail ho gaya.';msg.style.color='#c14a35';return;}
+  }else{entry.type='link';entry.link=link;}
+  const list=await sGet('dpp:'+subject,[]);
+  list.unshift(entry);
+  const ok=await sSet('dpp:'+subject,list);
+  if(!ok){msg.textContent='❌ Save fail ho gaya, dobara try karo.';msg.style.color='#c14a35';return;}
+  document.getElementById('dppTitle').value='';document.getElementById('dppFile').value='';document.getElementById('dppLink').value='';
+  msg.textContent='✅ DPP uploaded!';msg.style.color='var(--good)';
+  if(subject===activeDppSubject)renderDppList();
+  updateHomeStats();
+}
+async function renderDppList(){
+  const list=await sGet('dpp:'+activeDppSubject,[]);
+  const wrap=document.getElementById('dppList');
+  const done=list.filter(d=>d.completed).length;
+  document.getElementById('dppSubjBar').style.width=(list.length?Math.round(done/list.length*100):0)+'%';
+  document.getElementById('dppSubjBarText').textContent=`${done} of ${list.length} DPPs complete (${activeDppSubject})`;
+  if(!list.length){wrap.innerHTML='<div class="empty-state">Is subject mein abhi koi DPP upload nahi hua.</div>';return;}
+  wrap.innerHTML=list.map(item=>`
+    <div class="file-item">
+      <div class="file-info">
+        <b class="${item.completed?'':''}">${escapeHtml(item.title)}</b>
+        <span><span class="tag">${item.type==='file'?'File':'Link'}</span> ${new Date(item.ts).toLocaleDateString()} ${item.completed?'<span style="color:var(--good);font-weight:700;">✔ Completed</span>':''}</span>
+        ${item.answers && item.answers.length?`<span style="color:var(--good);font-weight:600;">📤 ${item.answers.length} solution(s) uploaded</span>`:''}
+      </div>
+      <div class="file-actions">
+        <button class="check-round ${item.completed?'on':''}" onclick="toggleDppDone('${item.id}',event)">${item.completed?'✓':''}</button>
+        <button class="btn ghost small" onclick="viewGeneric('dpp:${activeDppSubject}','${item.id}')">👁 View</button>
+        ${item.type==='file'?`<a class="btn ghost small" style="text-decoration:none;" href="${item.data}" download="${item.fileName}">⬇ Download</a>`:''}
+        <button class="btn ghost small" onclick="uploadDppSolution('${item.id}')">📤 Upload Solution</button>
+        <button class="btn danger small admin-only" onclick="deleteDpp('${item.id}')">🗑</button>
+      </div>
+    </div>`).join('');
+}
+async function toggleDppDone(id,ev){
+  const list=await sGet('dpp:'+activeDppSubject,[]);
+  const item=list.find(x=>x.id===id); if(!item)return;
+  item.completed=!item.completed;
+  await sSet('dpp:'+activeDppSubject,list);
+  if(item.completed){await logActivity();if(ev)burstConfetti(ev.clientX,ev.clientY);}
+  renderDppList();updateHomeStats();
+}
+async function deleteDpp(id){
+  if(!confirm('Ye DPP delete karna hai?'))return;
+  const list=await sGet('dpp:'+activeDppSubject,[]);
+  await sSet('dpp:'+activeDppSubject,list.filter(x=>x.id!==id));
+  renderDppList();updateHomeStats();
+}
+async function uploadDppSolution(id){
+  const list=await sGet('dpp:'+activeDppSubject,[]);
+  const item=list.find(x=>x.id===id); if(!item)return;
+  const choice=prompt('Solution ke liye link paste karo. Chhoti file ke liye "file" likho:');
+  if(choice===null)return;
+  if(choice.trim().toLowerCase()==='file'){
+    const inp=document.createElement('input');inp.type='file';
+    inp.onchange=async()=>{
+      const f=inp.files[0]; if(!f)return;
+      if(f.size>3.2*1024*1024){alert('File badi hai (>3MB). Link use karo.');return;}
+      const b64=await fileToBase64(f);
+      item.answers=item.answers||[];
+      item.answers.push({id:uid(),type:'file',fileName:f.name,data:b64,ts:Date.now()});
+      await sSet('dpp:'+activeDppSubject,list);renderDppList();
+    };
+    inp.click();
+  }else if(choice.trim()){
+    item.answers=item.answers||[];
+    item.answers.push({id:uid(),type:'link',link:choice.trim(),ts:Date.now()});
+    await sSet('dpp:'+activeDppSubject,list);renderDppList();
+  }
+}
+
+/* ================= NOTES LIBRARY ================= */
+let activeNotesSubject='Biology';
+function renderNotesSubjTabs(){
+  const subs=['Biology','Physics','Chemistry','General'];
+  document.getElementById('notesSubjTabs').innerHTML=subs.map(s=>`<button class="subj-btn ${s===activeNotesSubject?'active':''}" onclick="setNotesSubject('${s}')">${s}</button>`).join('');
+}
+function setNotesSubject(s){activeNotesSubject=s;renderNotesSubjTabs();renderNotesList();}
+async function renderNotesList(){
+  const all=await sGet('items:notes',[]);
+  const list=all.filter(i=>(i.subject||'General')===activeNotesSubject);
+  const wrap=document.getElementById('notesList');
+  if(!list.length){wrap.innerHTML='<div class="empty-state">Is subject mein abhi koi notes upload nahi hua.</div>';return;}
+  wrap.innerHTML=list.map(item=>`
+    <div class="file-item">
+      <div class="file-info"><b>${escapeHtml(item.title)}</b><span><span class="tag">${item.type==='file'?'File':'Link'}</span> &nbsp;${new Date(item.ts).toLocaleDateString()}</span></div>
+      <div class="file-actions">
+        <button class="btn ghost small" onclick="viewGeneric('items:notes','${item.id}')">👁 View</button>
+        ${item.type==='file'?`<a class="btn ghost small" style="text-decoration:none;" href="${item.data}" download="${item.fileName}">⬇ Download</a>`:''}
+        <button class="btn danger small admin-only" onclick="deleteGeneric('notes','${item.id}')">🗑</button>
+      </div>
+    </div>`).join('');
+}
+
+/* ================= UPLOAD CENTER ================= */
+const CATS=[{id:'syllabus',label:'📚 Syllabus'},{id:'qpaper',label:'🧾 Question Papers'},{id:'notes',label:'🗂️ Notes'}];
+let activeCat='syllabus';
+function renderCatTabs(){
+  document.getElementById('catTabs').innerHTML=CATS.map(c=>`<button class="cat-btn ${c.id===activeCat?'active':''}" onclick="setCat('${c.id}')">${c.label}</button>`).join('');
+  document.getElementById('uploaderTitle').textContent='Add to '+CATS.find(c=>c.id===activeCat).label.replace(/^\S+\s/,'');
+}
+function setCat(id){activeCat=id;renderCatTabs();renderFileList();}
+async function addItem(){
+  const title=document.getElementById('itemTitle').value.trim();
+  const subject=document.getElementById('itemSubject').value;
+  const fileInput=document.getElementById('itemFile');
+  const link=document.getElementById('itemLink').value.trim();
+  const msg=document.getElementById('uploadMsg');
+  if(!title){msg.textContent='Title daalo pehle.';msg.style.color='#c14a35';return;}
+  if(!fileInput.files.length && !link){msg.textContent='File choose karo ya link paste karo.';msg.style.color='#c14a35';return;}
+  let entry={id:uid(),title,cat:activeCat,subject,ts:Date.now(),answers:[]};
+  if(fileInput.files.length){
+    const f=fileInput.files[0];
+    if(f.size>3.2*1024*1024){msg.textContent='⚠️ Ye file ~'+(f.size/1024/1024).toFixed(1)+'MB ki hai — 3MB se badi ke liye link use karo.';msg.style.color='#c14a35';return;}
+    msg.textContent='Uploading...';msg.style.color='var(--text-soft)';
+    try{const b64=await fileToBase64(f);entry.type='file';entry.fileName=f.name;entry.mime=f.type;entry.data=b64;}
+    catch(e){msg.textContent='Upload fail ho gaya, chhoti file ya link try karo.';msg.style.color='#c14a35';return;}
+  }else{entry.type='link';entry.link=link;}
+  const list=await sGet('items:'+activeCat,[]);
+  list.unshift(entry);
+  const ok=await sSet('items:'+activeCat,list);
+  if(!ok){msg.textContent='❌ Save fail ho gaya, dobara try karo.';msg.style.color='#c14a35';return;}
+  document.getElementById('itemTitle').value='';document.getElementById('itemFile').value='';document.getElementById('itemLink').value='';
+  msg.textContent='✅ Uploaded!';msg.style.color='var(--good)';
+  renderFileList();updateHomeStats();
+  if(activeCat==='notes')renderNotesList();
+}
+async function renderFileList(){
+  const list=await sGet('items:'+activeCat,[]);
+  const wrap=document.getElementById('fileList');
+  if(!list.length){wrap.innerHTML='<div class="empty-state">Kuch bhi upload nahi hua abhi is section mein.</div>';return;}
+  wrap.innerHTML=list.map(item=>`
+    <div class="file-item">
+      <div class="file-info">
+        <b>${escapeHtml(item.title)}</b>
+        <span><span class="tag">${item.type==='file'?'File · '+escapeHtml(item.fileName||''):'Link'}</span> <span class="tag">${item.subject||'General'}</span> &nbsp;${new Date(item.ts).toLocaleDateString()}</span>
+        ${item.answers && item.answers.length ? `<span style="color:var(--good);font-weight:600;">✔ ${item.answers.length} answer(s) uploaded</span>`:''}
+      </div>
+      <div class="file-actions">
+        <button class="btn ghost small" onclick="viewGeneric('items:${activeCat}','${item.id}')">👁 View</button>
+        ${item.type==='file'?`<a class="btn ghost small" style="text-decoration:none;" href="${item.data}" download="${item.fileName}">⬇ Download</a>`:''}
+        <button class="btn ghost small" onclick="uploadAnswer('${item.id}')">📤 Upload Answer</button>
+        <button class="btn ghost small admin-only" onclick="editItem('${item.id}')">✏️ Edit</button>
+        <button class="btn danger small admin-only" onclick="deleteGeneric('${activeCat}','${item.id}')">🗑</button>
+      </div>
+    </div>`).join('');
+}
+async function viewGeneric(key,id){
+  const list=await sGet(key,[]);
+  const item=list.find(i=>i.id===id);
+  if(!item){alert('Ye item nahi mila — shayad delete ho gaya ho.');return;}
+  let body=`<h3>${escapeHtml(item.title)}</h3>`;
+  if(item.type==='link'){
+    body+=`<p>External link:</p><iframe src="${item.link}" style="height:60vh;"></iframe><p><a href="${item.link}" target="_blank" class="btn ghost small" style="text-decoration:none;display:inline-block;">↗ Open Link</a></p>`;
+  }else{
+    if(item.mime && item.mime.startsWith('image/')){body+=`<img src="${item.data}">`;}
+    else if(item.mime==='application/pdf'){body+=`<iframe src="${item.data}" style="height:65vh;"></iframe>`;}
+    else{body+=`<p style="color:var(--text-soft);font-size:13px;">Preview available nahi hai is file type ke liye — download karke dekho.</p>`;}
+    body+=`<p><a href="${item.data}" download="${item.fileName||item.title}" class="btn small" style="text-decoration:none;display:inline-block;">⬇ Download</a></p>`;
+  }
+  if(item.answers && item.answers.length){
+    body+='<h3 style="margin-top:20px;">Uploaded Answers</h3>';
+    item.answers.forEach(a=>{
+      if(a.type==='link'){body+=`<div class="answer-box"><a href="${a.link}" target="_blank">${escapeHtml(a.link)}</a> <span style="color:var(--text-soft);">— ${new Date(a.ts).toLocaleString()}</span></div>`;}
+      else{body+=`<div class="answer-box"><a href="${a.data}" download="${a.fileName}">⬇ Download ${escapeHtml(a.fileName)}</a> <span style="color:var(--text-soft);">— ${new Date(a.ts).toLocaleString()}</span></div>`;}
+    });
+  }
+  document.getElementById('modalBody').innerHTML=body;
+  document.getElementById('modalBg').classList.add('show');
+}
+function closeModal(){document.getElementById('modalBg').classList.remove('show');}
+async function editItem(id){
+  const list=await sGet('items:'+activeCat,[]);
+  const idx=list.findIndex(i=>i.id===id); if(idx<0)return;
+  const newTitle=prompt('Naya title:',list[idx].title); if(newTitle===null)return;
+  list[idx].title=newTitle.trim()||list[idx].title;
+  await sSet('items:'+activeCat,list);
+  renderFileList();
+}
+async function deleteGeneric(cat,id){
+  if(!confirm('Ye item delete karna hai?'))return;
+  const list=await sGet('items:'+cat,[]);
+  await sSet('items:'+cat,list.filter(i=>i.id!==id));
+  if(cat===activeCat)renderFileList();
+  if(cat==='notes')renderNotesList();
+  updateHomeStats();
+}
+async function uploadAnswer(id){
+  const list=await sGet('items:'+activeCat,[]);
+  const idx=list.findIndex(i=>i.id===id); if(idx<0)return;
+  const choice=prompt('Answer ke liye link paste karo. Chhoti file ke liye "file" likho:');
+  if(choice===null)return;
+  if(choice.trim().toLowerCase()==='file'){
+    const inp=document.createElement('input');inp.type='file';
+    inp.onchange=async()=>{
+      const f=inp.files[0]; if(!f)return;
+      if(f.size>3.2*1024*1024){alert('File badi hai (>3MB). Link use karo.');return;}
+      const b64=await fileToBase64(f);
+      list[idx].answers=list[idx].answers||[];
+      list[idx].answers.push({id:uid(),type:'file',fileName:f.name,data:b64,ts:Date.now()});
+      await sSet('items:'+activeCat,list);renderFileList();
+    };
+    inp.click();
+  }else if(choice.trim()){
+    list[idx].answers=list[idx].answers||[];
+    list[idx].answers.push({id:uid(),type:'link',link:choice.trim(),ts:Date.now()});
+    await sSet('items:'+activeCat,list);renderFileList();
+  }
+}
+
+/* ================= HOME STATS + LOVE METER ================= */
+async function updateHomeStats(){
+  let totalChapters=0,doneChapters=0;
+  for(const s of SUBJECTS){const list=await sGet('syllabus:'+s,[]);totalChapters+=list.length;doneChapters+=list.filter(c=>c.complete).length;}
+  document.getElementById('homeSyllabusText').textContent=totalChapters?doneChapters+' of '+totalChapters+' chapters complete':'Nothing added yet';
+  document.getElementById('homeSyllabusBar').style.width=(totalChapters?Math.round(doneChapters/totalChapters*100):0)+'%';
+
+  const slots=await sGet('timetable:current',[]);
+  const doneSlots=slots.filter(s=>s.done).length;
+  document.getElementById('homePlanText').textContent=slots.length?doneSlots+' of '+slots.length+' tasks done today':'No slots set for today';
+  document.getElementById('homePlanBar').style.width=(slots.length?Math.round(doneSlots/slots.length*100):0)+'%';
+
+  let totalDpp=0,doneDpp=0;
+  for(const s of SUBJECTS){const list=await sGet('dpp:'+s,[]);totalDpp+=list.length;doneDpp+=list.filter(d=>d.completed).length;}
+  document.getElementById('homeDppText').textContent=totalDpp?doneDpp+' of '+totalDpp+' DPPs complete':'Nothing uploaded yet';
+  document.getElementById('homeDppBar').style.width=(totalDpp?Math.round(doneDpp/totalDpp*100):0)+'%';
+
+  const results=await sGet('tests:results',[]);
+  document.getElementById('homeTestText').textContent=results.length+' tests completed';
+  document.getElementById('homeTestBar').style.width=Math.min(100,results.length*15)+'%';
+
+  const lovePoints=doneChapters*5+doneSlots*3+doneDpp*3+results.length*8;
+  const pct=Math.min(100,5+lovePoints);
+  document.getElementById('loveFill').style.width=pct+'%';
+  const level=Math.max(1,Math.floor(lovePoints/15)+1);
+  const labels=['Just getting started','Building momentum','Growing stronger together','Unstoppable duo','White coat almost there ❤️'];
+  document.getElementById('loveLvl').textContent='Level '+level+' — '+labels[Math.min(labels.length-1,level-1)];
+}
+
+/* ================= PROGRESS PAGE (streak + badges + mistakes) ================= */
+async function renderProgressPage(){
+  const log=await sGet('activity:log',[]);
+  const streak=computeStreak(log);
+  document.getElementById('streakCount').textContent=streak;
+  document.getElementById('totalActiveDays').textContent=log.length;
+
+  let doneChapters=0,totalTests=0;
+  for(const s of SUBJECTS){const list=await sGet('syllabus:'+s,[]);doneChapters+=list.filter(c=>c.complete).length;}
+  const results=await sGet('tests:results',[]);totalTests=results.length;
+  document.getElementById('totalChaptersDone').textContent=doneChapters;
+
+  const badges=[
+    {emoji:'🔥',name:'7 Day Streak',unlocked:streak>=7},
+    {emoji:'🌟',name:'30 Day Streak',unlocked:streak>=30},
+    {emoji:'📘',name:'10 Chapters Done',unlocked:doneChapters>=10},
+    {emoji:'🧬',name:'Biology Master',unlocked:doneChapters>=15},
+    {emoji:'📝',name:'First Test Taken',unlocked:totalTests>=1},
+    {emoji:'🏆',name:'5 Tests Completed',unlocked:totalTests>=5},
+  ];
+  document.getElementById('badgeGrid').innerHTML=badges.map(b=>`
+    <div class="badge ${b.unlocked?'unlocked':''}"><div class="emoji">${b.emoji}</div><h4>${b.name}</h4><span>${b.unlocked?'Unlocked!':'Locked'}</span></div>
+  `).join('');
+
+  renderMistakes();
+}
+async function addMistake(){
+  const q=document.getElementById('mistakeQ').value.trim();
+  const sol=document.getElementById('mistakeSol').value.trim();
+  const reason=document.getElementById('mistakeReason').value.trim();
+  if(!q||!sol){alert('Question aur solution dono likho.');return;}
+  const list=await sGet('mistakes:all',[]);
+  list.unshift({id:uid(),q,sol,reason,ts:Date.now()});
+  await sSet('mistakes:all',list);
+  document.getElementById('mistakeQ').value='';document.getElementById('mistakeSol').value='';document.getElementById('mistakeReason').value='';
+  renderMistakes();
+}
+async function renderMistakes(){
+  const list=await sGet('mistakes:all',[]);
+  const wrap=document.getElementById('mistakeList');
+  if(!list.length){wrap.innerHTML='<div class="empty-state">Koi mistake note nahi hui abhi — accha hai! 🎉</div>';return;}
+  wrap.innerHTML=list.map(m=>`
+    <div class="mistake-item">
+      <div class="lbl">Question</div><div>${escapeHtml(m.q)}</div>
+      <div class="lbl">Correct Solution</div><div>${escapeHtml(m.sol)}</div>
+      ${m.reason?`<div class="lbl">Reason</div><div>${escapeHtml(m.reason)}</div>`:''}
+      <div class="row" style="margin-top:10px;"><button class="btn danger small" onclick="deleteMistake('${m.id}')">🗑 Remove</button></div>
+    </div>`).join('');
+}
+async function deleteMistake(id){
+  const list=await sGet('mistakes:all',[]);
+  await sSet('mistakes:all',list.filter(x=>x.id!==id));
+  renderMistakes();
+}
+
+/* ================= DAILY PHOTO ================= */
+async function uploadDailyPhoto(){
+  const inp=document.getElementById('dailyPhotoFile');
+  const f=inp.files[0];
+  if(!f)return;
+  if(f.size>3.2*1024*1024){alert('Photo 3MB se badi hai — thodi compress karke try karo.');return;}
+  const b64=await fileToBase64(f);
+  const ok=await sSet('photo:daily',{data:b64,fileName:f.name,ts:Date.now()});
+  if(!ok){alert('Photo save nahi ho payi, dobara try karo.');return;}
+  inp.value='';
+  renderDailyPhoto();
+  burstConfetti(window.innerWidth/2,200);
+}
+async function removeDailyPhoto(){
+  if(!confirm('Aaj ki photo remove karni hai?'))return;
+  await sSet('photo:daily',null);
+  renderDailyPhoto();
+}
+async function renderDailyPhoto(){
+  const photo=await sGet('photo:daily',null);
+  const frame=document.getElementById('photoFrame');
+  const caption=document.getElementById('photoCaption');
+  const dlRow=document.getElementById('photoDownloadRow');
+  if(photo && photo.data){
+    frame.innerHTML=`<img src="${photo.data}" alt="Today's photo">`;
+    caption.textContent='📅 Uploaded '+new Date(photo.ts).toLocaleDateString();
+    dlRow.innerHTML=`<a class="btn ghost small" style="text-decoration:none;" href="${photo.data}" download="${photo.fileName||'photo.jpg'}">⬇ Download Photo</a>`;
+  }else{
+    caption.textContent='Koi photo upload nahi hui abhi.';
+    dlRow.innerHTML='';
+    frame.innerHTML=`<svg class="doctor-figure" viewBox="0 0 260 320" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="130" cy="300" rx="90" ry="14" fill="#ffc9d7" opacity=".5"/>
+      <path d="M70 140 Q65 250 80 300 L180 300 Q195 250 190 140 Z" fill="#ffffff" stroke="#e9c3ce" stroke-width="2"/>
+      <path d="M70 140 Q130 165 190 140 L190 160 Q130 185 70 160 Z" fill="#f7dfe6"/>
+      <rect x="122" y="150" width="16" height="130" fill="#a52c53" opacity=".15"/>
+      <circle cx="130" cy="95" r="42" fill="#f6c6a5"/>
+      <path d="M90 85 Q130 40 170 85 Q172 55 130 48 Q88 55 90 85Z" fill="#3a1f2b"/>
+      <circle cx="114" cy="98" r="3.2" fill="#3a1f2b"/>
+      <circle cx="146" cy="98" r="3.2" fill="#3a1f2b"/>
+      <path d="M116 112 Q130 120 144 112" stroke="#3a1f2b" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+      <path d="M108 128 Q130 138 152 128 L152 140 Q130 150 108 140 Z" fill="#a52c53"/>
+      <path d="M100 150 Q130 130 100 118 Q90 130 100 150" fill="none" stroke="#cf9b45" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="100" cy="118" r="6" fill="#cf9b45"/>
+      <circle cx="245" cy="70" r="13" class="heart-pop" fill="#a52c53"/>
+      <text x="238" y="75" font-size="13" fill="#fff">❤</text>
+    </svg>`;
+  }
+}
+
+/* ================= WEEKLY TEST ================= */
+let builderQuestions=[];
+function addBuilderQuestion(){builderQuestions.push({id:uid(),text:'',options:['','','',''],correct:0});renderBuilder();}
+function renderBuilder(){
+  document.getElementById('qBuilderList').innerHTML=builderQuestions.map((q,i)=>`
+    <div class="qform">
+      <b>Q${i+1}</b>
+      <div class="row" style="margin:6px 0;"><input type="text" style="width:100%" placeholder="Question text" value="${escapeHtml(q.text)}" oninput="builderQuestions[${i}].text=this.value"></div>
+      ${q.options.map((o,j)=>`<div class="opt-row"><input type="radio" name="correct-${q.id}" ${q.correct===j?'checked':''} onchange="builderQuestions[${i}].correct=${j}"><input type="text" placeholder="Option ${String.fromCharCode(65+j)}" value="${escapeHtml(o)}" oninput="builderQuestions[${i}].options[${j}]=this.value"></div>`).join('')}
+      <button class="btn danger small" onclick="removeBuilderQ(${i})">Remove Question</button>
+    </div>`).join('');
+}
+function removeBuilderQ(i){builderQuestions.splice(i,1);renderBuilder();}
+async function saveTest(){
+  const name=document.getElementById('testName').value.trim();
+  const mins=parseInt(document.getElementById('testMinutes').value)||30;
+  const link=document.getElementById('testPaperLink').value.trim();
+  if(!name){alert('Test ka naam do.');return;}
+  if(!builderQuestions.length){alert('Kam se kam ek question add karo.');return;}
+  for(const q of builderQuestions){if(!q.text.trim()||q.options.some(o=>!o.trim())){alert('Har question ke sabhi options aur text bharo.');return;}}
+  const tests=await sGet('tests:saved',[]);
+  tests.unshift({id:uid(),name,mins,link,questions:JSON.parse(JSON.stringify(builderQuestions)),ts:Date.now()});
+  await sSet('tests:saved',tests);
+  builderQuestions=[];renderBuilder();
+  document.getElementById('testName').value='';document.getElementById('testPaperLink').value='';
+  renderTestList();updateHomeStats();
+}
+async function renderTestList(){
+  const tests=await sGet('tests:saved',[]);
+  const wrap=document.getElementById('testList');
+  if(!tests.length){wrap.innerHTML='<div class="empty-state">Koi test save nahi hua abhi.</div>';return;}
+  wrap.innerHTML=tests.map(t=>`
+    <div class="file-item">
+      <div class="file-info"><b>${escapeHtml(t.name)}</b><span><span class="tag">${t.questions.length} Qs</span> · ${t.mins} min ${t.link?`· <a href="${t.link}" target="_blank">Paper PDF ↗</a>`:''}</span></div>
+      <div class="file-actions"><button class="btn small" onclick="startTest('${t.id}')">▶ Start Test</button><button class="btn danger small admin-only" onclick="deleteTest('${t.id}')">🗑</button></div>
+    </div>`).join('');
+}
+async function deleteTest(id){const tests=await sGet('tests:saved',[]);await sSet('tests:saved',tests.filter(t=>t.id!==id));renderTestList();updateHomeStats();}
+let timerInterval=null;
+async function startTest(id){
+  const tests=await sGet('tests:saved',[]);
+  const t=tests.find(x=>x.id===id); if(!t)return;
+  document.getElementById('testBuilder').style.display='none';
+  const runner=document.getElementById('testRunner'); runner.style.display='block';
+  let secondsLeft=t.mins*60;
+  const answers=new Array(t.questions.length).fill(null);
+  function renderQuestions(){
+    return t.questions.map((q,i)=>`<div class="q-live"><div class="qnum">Question ${i+1} of ${t.questions.length}</div><p style="font-size:15px;font-weight:500;">${escapeHtml(q.text)}</p>${q.options.map((o,j)=>`<button type="button" class="q-opt" data-q="${i}" data-o="${j}" onclick="selectOpt(${i},${j})">${String.fromCharCode(65+j)}. ${escapeHtml(o)}</button>`).join('')}</div>`).join('');
+  }
+  runner.innerHTML=`<div class="timer-badge" id="timerBadge">⏱ 00:00</div>${renderQuestions()}<button class="btn" onclick="submitTest()">Submit Test</button>`;
+  window.selectOpt=(qi,oi)=>{answers[qi]=oi;document.querySelectorAll(`.q-opt[data-q="${qi}"]`).forEach(b=>b.classList.remove('selected'));document.querySelector(`.q-opt[data-q="${qi}"][data-o="${oi}"]`).classList.add('selected');};
+  function tick(){
+    const m=String(Math.floor(secondsLeft/60)).padStart(2,'0'),s=String(secondsLeft%60).padStart(2,'0');
+    const badge=document.getElementById('timerBadge');
+    if(badge){badge.textContent='⏱ '+m+':'+s;badge.classList.toggle('warn',secondsLeft<=60);}
+    if(secondsLeft<=0){clearInterval(timerInterval);submitTest();return;}
+    secondsLeft--;
+  }
+  tick();timerInterval=setInterval(tick,1000);
+  window.submitTest=async function(){
+    clearInterval(timerInterval);
+    let score=0;
+    t.questions.forEach((q,i)=>{
+      document.querySelectorAll(`.q-opt[data-q="${i}"]`).forEach((b,j)=>{if(j===q.correct)b.classList.add('correct');else if(j===answers[i])b.classList.add('wrong');b.onclick=null;});
+      if(answers[i]===q.correct)score++;
+    });
+    const btn=document.querySelector('#testRunner button.btn'); if(btn)btn.style.display='none';
+    const results=await sGet('tests:results',[]);
+    results.unshift({id:uid(),testName:t.name,score,total:t.questions.length,ts:Date.now()});
+    await sSet('tests:results',results);
+    await logActivity();
+    updateHomeStats();
+    setTimeout(()=>{
+      runner.insertAdjacentHTML('afterbegin',`<div class="test-card result-card"><div class="score">${score}/${t.questions.length}</div><p style="color:var(--text-soft);">${t.name} — completed</p><button class="btn ghost" onclick="backToTests()">← Back to Tests</button></div>`);
+      window.scrollTo({top:0,behavior:'smooth'});
+      burstConfetti(window.innerWidth/2,120);
+    },400);
+  };
+}
+function backToTests(){document.getElementById('testBuilder').style.display='block';document.getElementById('testRunner').style.display='none';document.getElementById('testRunner').innerHTML='';renderTestList();}
+
+/* ================= POMODORO TIMER ================= */
+let pomoSeconds=25*60,pomoRunning=false,pomoInt=null,pomoIsBreak=false;
+function pomoRender(){const m=String(Math.floor(pomoSeconds/60)).padStart(2,'0'),s=String(pomoSeconds%60).padStart(2,'0');document.getElementById('pomoTime').textContent=m+':'+s;}
+function pomoStart(){
+  if(pomoRunning)return; pomoRunning=true;
+  pomoInt=setInterval(()=>{
+    pomoSeconds--; pomoRender();
+    if(pomoSeconds<=0){
+      clearInterval(pomoInt);pomoRunning=false;burstConfetti(window.innerWidth/2,300);
+      pomoIsBreak=!pomoIsBreak; pomoSeconds=pomoIsBreak?5*60:25*60; pomoRender();
+      alert(pomoIsBreak?'🎉 Great focus! Take a 5 min break.':'Break khatam — next focus session shuru karo!');
+    }
+  },1000);
+}
+function pomoPause(){pomoRunning=false;clearInterval(pomoInt);}
+function pomoReset(){pomoRunning=false;clearInterval(pomoInt);pomoIsBreak=false;pomoSeconds=25*60;pomoRender();}
+pomoRender();
+
+/* ================= VIDEO CALL ================= */
+let jitsiApi=null;
+function startCall(){
+  const room=(document.getElementById('roomName').value.trim()||'dr-sakshi-love-room').replace(/\s+/g,'-');
+  if(jitsiApi){jitsiApi.dispose();}
+  jitsiApi=new JitsiMeetExternalAPI('meet.jit.si',{roomName:room,parentNode:document.getElementById('jitsi-container'),width:'100%',height:520,configOverwrite:{prejoinPageEnabled:false}});
+}
+function endCall(){if(jitsiApi){jitsiApi.dispose();jitsiApi=null;}document.getElementById('jitsi-container').innerHTML='';}
+
+/* ================= INIT ================= */
+initTheme();
+initAuth();
+if(!supabaseClient){
+  const warn=document.createElement('div');
+  warn.style.cssText='position:fixed;bottom:0;left:0;right:0;background:#c14a35;color:#fff;text-align:center;padding:8px;font-size:12px;z-index:200;';
+  warn.textContent='⚠️ Supabase configured nahi hai abhi — data sirf isi browser mein save ho raha hai, dusre device se sync nahi hoga.';
+  document.body.appendChild(warn);
+}
+renderCatTabs();renderFileList();
+renderBuilder();renderTestList();
+renderSlots();
+renderSubjTabs();renderChapters();
+renderDppSubjTabs();renderDppList();
+renderNotesSubjTabs();renderNotesList();
+renderDailyPhoto();
+updateHomeStats();
+</script>
+</body>
+</html>
