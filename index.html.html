@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,600&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://meet.jit.si/external_api.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
 :root{
   --bg:#fff7f8; --bg-card:#ffffff; --blush:#ffe3ea; --blush-deep:#ffc9d7;
@@ -20,7 +21,10 @@ body[data-theme="dark"]{
   --line:#3e2530; --good:#6fcf97; --shadow:0 10px 30px rgba(0,0,0,.45);
 }
 *{box-sizing:border-box;}
-body{margin:0;background:var(--bg);color:var(--text);font-family:'Poppins',sans-serif;transition:background .4s,color .4s;}
+body{margin:0;background:var(--bg);background-image:linear-gradient(120deg,var(--bg),var(--blush) 40%,var(--bg) 70%,var(--blush-deep) 100%);background-size:300% 300%;animation:dynamicBg 22s ease infinite;color:var(--text);font-family:'Poppins',sans-serif;transition:background-color .4s,color .4s;}
+@keyframes dynamicBg{0%{background-position:0% 50%;}50%{background-position:100% 50%;}100%{background-position:0% 50%;}}
+.story-badge{display:inline-flex;align-items:center;gap:6px;background:var(--wine-dark);color:#fff;padding:6px 14px;border-radius:999px;font-size:11.5px;font-weight:700;letter-spacing:.5px;margin-bottom:12px;box-shadow:var(--shadow);animation:storyPulse 2.6s ease-in-out infinite;}
+@keyframes storyPulse{0%,100%{transform:scale(1);}50%{transform:scale(1.04);}}
 h1,h2,h3,.display{font-family:'Playfair Display',serif;}
 .wrap{max-width:1120px;margin:0 auto;padding:0 20px;}
 ::-webkit-scrollbar{width:8px;}::-webkit-scrollbar-thumb{background:var(--blush-deep);border-radius:10px;}
@@ -180,6 +184,29 @@ input[type=file]{font-size:12.5px;color:var(--text-soft);}
 .result-card{text-align:center;padding:30px;}
 .result-card .score{font-size:48px;color:var(--wine);font-family:'Playfair Display',serif;font-weight:700;}
 
+.exam-layout{display:grid;grid-template-columns:1fr 260px;gap:18px;align-items:start;}
+@media(max-width:820px){.exam-layout{grid-template-columns:1fr;}}
+.exam-sidebar{background:var(--bg-card);border:1px solid var(--line);border-radius:16px;padding:16px;position:sticky;top:96px;box-shadow:var(--shadow);}
+.q-palette{display:grid;grid-template-columns:repeat(auto-fill,minmax(36px,1fr));gap:6px;margin:10px 0;}
+.pal-btn{width:36px;height:36px;border-radius:8px;border:1px solid var(--line);background:var(--bg);cursor:pointer;font-size:12px;font-weight:700;color:var(--text-soft);position:relative;}
+.pal-btn.answered{background:var(--good);color:#fff;border-color:var(--good);}
+.pal-btn.marked{background:var(--gold);color:#fff;border-color:var(--gold);}
+.pal-btn.current{outline:2px solid var(--wine);outline-offset:1px;}
+.legend-row{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-soft);margin-top:6px;}
+.legend-dot{width:10px;height:10px;border-radius:3px;display:inline-block;}
+.exam-toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center;}
+.stat-pills{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0;}
+.stat-pill{background:var(--bg-card);border:1px solid var(--line);border-radius:14px;padding:14px 18px;text-align:center;min-width:100px;box-shadow:var(--shadow);}
+.stat-pill b{font-size:22px;display:block;font-family:'Playfair Display',serif;}
+.stat-pill span{font-size:10.5px;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px;}
+.stat-pill.correct b{color:var(--good);}
+.stat-pill.wrong b{color:#c14a35;}
+.stat-pill.skip b{color:var(--text-soft);}
+.sol-block{background:var(--bg-card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:12px;}
+.sol-block .yourans{font-size:12.5px;margin-top:6px;}
+.ai-box{background:var(--blush);border-radius:12px;padding:12px 14px;font-size:13px;margin-top:10px;white-space:pre-wrap;line-height:1.5;}
+.leader-row{display:flex;justify-content:space-between;align-items:center;background:var(--bg-card);border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin-bottom:8px;}
+
 .pomo{background:var(--bg-card);border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:var(--shadow);text-align:center;margin-top:18px;}
 .pomo .time{font-size:44px;font-family:'Playfair Display',serif;color:var(--wine);font-weight:700;}
 .pomo .label{font-size:12px;color:var(--text-soft);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;}
@@ -209,6 +236,45 @@ input[type=file]{font-size:12.5px;color:var(--text-soft);}
 .admin-only{}
 body.student-mode .admin-only{display:none !important;}
 
+.dash-strip{display:grid;grid-template-columns:1.4fr .8fr .8fr 1fr;gap:14px;margin-top:16px;}
+@media(max-width:800px){.dash-strip{grid-template-columns:1fr 1fr;}}
+.dash-card{background:var(--bg-card);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:var(--shadow);}
+.greet-text{font-family:'Playfair Display',serif;font-size:17px;color:var(--wine-dark);margin-bottom:8px;}
+.goal-row{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;}
+.mini-cal{display:flex;gap:6px;}
+.mini-cal .dot{width:22px;height:22px;border-radius:7px;background:var(--blush);display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--text-soft);}
+.mini-cal .dot.active{background:var(--good);color:#fff;font-weight:700;}
+.hug-btn{background:linear-gradient(135deg,var(--wine),var(--gold));color:#fff;border:none;padding:12px 22px;border-radius:999px;font-size:14px;font-weight:700;cursor:pointer;box-shadow:var(--shadow);transition:.2s;}
+.hug-btn:hover{transform:scale(1.05);}
+.habit-card{background:var(--bg-card);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:var(--shadow);}
+.habit-card h4{margin:0 0 10px;font-size:13.5px;color:var(--wine-dark);}
+.water-row{display:flex;align-items:center;gap:10px;}
+.water-btn{width:32px;height:32px;border-radius:50%;border:1px solid var(--wine);background:var(--bg);color:var(--wine);font-size:16px;cursor:pointer;}
+.wall-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-top:14px;}
+.wall-note{border-radius:14px;padding:16px;font-size:13px;line-height:1.5;box-shadow:var(--shadow);position:relative;transform:rotate(-1deg);}
+.wall-note:nth-child(even){transform:rotate(1deg);}
+.wall-note.morning{background:linear-gradient(135deg,#fff3d6,#ffe3ea);}
+.wall-note.night{background:linear-gradient(135deg,#e3e0ff,#ffe3ea);}
+.wall-note.secret{background:linear-gradient(135deg,#3a1f2b,#6d1c38);color:#fff;}
+.wall-note.general{background:var(--blush);}
+.wall-note .wtag{font-size:10px;text-transform:uppercase;letter-spacing:.5px;opacity:.7;margin-bottom:6px;display:block;}
+.mood-btn{background:var(--bg-card);border:2px solid var(--line);border-radius:16px;padding:14px 16px;text-align:center;cursor:pointer;transition:.2s;min-width:76px;}
+.mood-btn:hover{transform:translateY(-2px);}
+.mood-btn.selected{border-color:var(--wine);background:var(--blush);box-shadow:var(--shadow);}
+.mood-btn .em{font-size:26px;display:block;}
+.mood-btn span{font-size:10.5px;color:var(--text-soft);}
+.ai-box{background:var(--blush);border-radius:12px;padding:14px 16px;font-size:13px;line-height:1.6;margin-top:10px;}
+.journal-entry{background:var(--bg-card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:10px;}
+.journal-entry .jdate{font-size:11px;color:var(--gold);font-weight:700;text-transform:uppercase;letter-spacing:.5px;}
+.journal-entry .jrow{margin-top:6px;font-size:13px;}
+.journal-entry .jrow b{color:var(--wine-dark);}
+.gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-top:16px;}
+.gallery-item{background:var(--bg-card);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:var(--shadow);animation:rise .4s ease both;}
+.gallery-item img{width:100%;height:140px;object-fit:cover;display:block;}
+.gallery-item .gcap{padding:8px 10px;font-size:11.5px;color:var(--text-soft);}
+.note-item{background:var(--bg-card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:10px;}
+.note-item.locked{background:linear-gradient(135deg,var(--blush),var(--bg-card));text-align:center;color:var(--text-soft);}
+.btn.ghost.selected{background:var(--wine);color:#fff;}
 footer{text-align:center;padding:28px 0;color:var(--text-soft);font-size:12px;}
 </style>
 </head>
@@ -250,10 +316,13 @@ footer{text-align:center;padding:28px 0;color:var(--text-soft);font-size:12px;}
       <button class="tab-btn admin-only" data-tab="upload">Upload Center</button>
       <button class="tab-btn" data-tab="test">Weekly Test</button>
       <button class="tab-btn" data-tab="video">Video Call</button>
+      <button class="tab-btn" data-tab="us">💞 Us</button>
+      <button class="tab-btn" data-tab="aitools">AI Buddy</button>
     </div>
     <div class="nav-tools">
       <div class="clock-widget" id="clockWidget">--:--:--</div>
       <button class="icon-btn" id="themeBtn" onclick="toggleTheme()" title="Dark / Light mode">🌙</button>
+      <button class="icon-btn" onclick="openAiSettings()" title="AI Settings">⚙️</button>
       <span class="role-badge" id="roleBadge">Admin</span>
       <button class="mode-btn" onclick="logout()">Logout</button>
     </div>
@@ -265,6 +334,7 @@ footer{text-align:center;padding:28px 0;color:var(--text-soft);font-size:12px;}
   <div class="wrap">
     <div class="hero">
       <div>
+        <div class="story-badge" id="storyChapterBadge">📖 Chapter 1: The Journey Begins</div>
         <div class="eyebrow">Future MBBS · NEET 2027</div>
         <h1>Every chapter today<br>brings <em>Dr. Sakshi</em> one<br>step closer.</h1>
         <p class="quote" id="quoteText">Loading today's motivation…</p>
@@ -306,6 +376,36 @@ footer{text-align:center;padding:28px 0;color:var(--text-soft);font-size:12px;}
 
     <div class="pulse-divider"><svg viewBox="0 0 800 40" preserveAspectRatio="none"><path d="M0 20 L200 20 L225 3 L245 37 L268 20 L800 20"/></svg></div>
 
+    <div class="dash-strip">
+      <div class="dash-card">
+        <div class="greet-text" id="greetText">Good Morning 👋</div>
+        <div class="goal-row">
+          <span id="goalText" style="font-size:12.5px;color:var(--text-soft);">Aaj ka goal set nahi hua.</span>
+          <button class="btn ghost small admin-only" onclick="setTodayGoal()">✏️ Set Goal</button>
+        </div>
+      </div>
+      <div class="dash-card" style="text-align:center;">
+        <svg viewBox="0 0 100 100" width="86" height="86">
+          <circle cx="50" cy="50" r="42" fill="none" stroke="var(--blush)" stroke-width="9"/>
+          <circle id="ringProgress" cx="50" cy="50" r="42" fill="none" stroke="url(#ringGrad)" stroke-width="9" stroke-linecap="round" stroke-dasharray="264" stroke-dashoffset="264" transform="rotate(-90 50 50)"/>
+          <defs><linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="var(--gold)"/><stop offset="100%" stop-color="var(--wine)"/></linearGradient></defs>
+          <text x="50" y="56" text-anchor="middle" font-size="20" font-weight="700" fill="var(--wine)" id="ringText">0%</text>
+        </svg>
+        <div style="font-size:11px;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px;">Today's Progress</div>
+      </div>
+      <div class="dash-card" style="text-align:center;">
+        <div style="font-size:34px;" id="dashStreakNum">0</div>
+        <div style="font-size:11px;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px;">🔥 Day Streak</div>
+      </div>
+      <div class="dash-card">
+        <div style="font-size:11px;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Last 7 Days</div>
+        <div class="mini-cal" id="miniCal"></div>
+      </div>
+    </div>
+
+    <div class="card" id="currentStudyCard" style="background:linear-gradient(120deg,var(--blush),var(--bg-card));border:1px solid var(--gold);margin-top:16px;">
+      <h3>📖 Currently Studying</h3><p id="currentStudyText">Kuch bhi pin nahi hua abhi — Syllabus mein 📌 dabao.</p>
+    </div>
     <div class="grid">
       <div class="card"><h3>📚 Overall Syllabus</h3><p id="homeSyllabusText">Nothing added yet</p><div class="progress-track"><div class="progress-fill" id="homeSyllabusBar" style="width:0%"></div></div></div>
       <div class="card"><h3>🗓️ Today's Timetable</h3><p id="homePlanText">No slots set for today</p><div class="progress-track"><div class="progress-fill" id="homePlanBar" style="width:0%"></div></div></div>
@@ -414,6 +514,10 @@ footer{text-align:center;padding:28px 0;color:var(--text-soft);font-size:12px;}
     <div class="badge-grid" id="badgeGrid"></div>
 
     <h3 style="color:var(--wine-dark);margin-top:30px;">Mistake Notebook</h3>
+    <div class="row" style="margin-bottom:10px;">
+      <button class="cat-btn active" id="mistakeAllBtn" onclick="renderMistakes(false);setMistakeFilterBtn(false)">All</button>
+      <button class="cat-btn" id="mistakeBmBtn" onclick="renderMistakes(true);setMistakeFilterBtn(true)">🔖 Bookmarked</button>
+    </div>
     <div class="add-form" style="margin-bottom:16px;">
       <h3>Add a Mistake</h3>
       <div class="row" style="margin-bottom:8px;"><textarea id="mistakeQ" placeholder="Wrong question" rows="2" style="width:100%;"></textarea></div>
@@ -454,21 +558,64 @@ footer{text-align:center;padding:28px 0;color:var(--text-soft);font-size:12px;}
   <div class="wrap">
     <div class="section-title"><h2>Weekly Test</h2><span class="pill-note">NEET-style · Timed</span></div>
     <div id="testBuilder">
+
+      <div class="test-card admin-only" style="border:2px dashed var(--gold);margin-bottom:16px;">
+        <h3 style="margin-top:0;color:var(--wine-dark);">🤖 PDF → Auto MCQ (AI)</h3>
+        <p style="color:var(--text-soft);font-size:12.5px;margin-top:0;">Question-paper PDF upload karo — AI khud questions, options aur answers detect karke test bana dega. Answer key na mile to AI khud solve karke sahi answer bhi de dega.</p>
+        <div class="row" style="margin-bottom:10px;">
+          <input type="text" id="aiTestName" placeholder="Test name" style="min-width:220px;">
+          <select id="aiTestSubject"><option>Biology</option><option>Physics</option><option>Chemistry</option><option>Mixed</option></select>
+          <input type="file" id="aiPdfFile" accept="application/pdf">
+        </div>
+        <textarea id="aiPastedText" placeholder="...ya seedha question paper ka text yahan paste karo (PDF ki jagah)" rows="3" style="width:100%;margin-bottom:10px;"></textarea>
+        <button class="btn" onclick="generateMcqFromPdf()">✨ Generate MCQ Test</button>
+        <span id="aiGenMsg" style="font-size:12px;color:var(--text-soft);margin-left:8px;"></span>
+      </div>
+
       <div class="test-card admin-only">
-        <h3 style="margin-top:0;color:var(--wine-dark);">Create This Week's Test</h3>
+        <h3 style="margin-top:0;color:var(--wine-dark);">Create Test Manually</h3>
         <div class="row" style="margin-bottom:10px;">
           <input type="text" id="testName" placeholder="Test name" style="min-width:260px;">
           <input type="number" id="testMinutes" placeholder="Duration (mins)" value="30" style="width:120px;">
+          <select id="testSubject"><option>Biology</option><option>Physics</option><option>Chemistry</option><option>Mixed</option></select>
         </div>
-        <input type="url" id="testPaperLink" placeholder="Optional: link to original question-paper PDF" style="width:100%;margin-bottom:14px;">
+        <div class="row" style="margin-bottom:10px;">
+          <input type="url" id="testPaperLink" placeholder="Optional: link to original question-paper PDF" style="flex:1;min-width:220px;">
+          <input type="datetime-local" id="testSchedule" title="Schedule (optional) — test unlocks at this time">
+        </div>
         <div id="qBuilderList"></div>
         <button class="btn ghost small" onclick="addBuilderQuestion()">+ Add Question</button>
         <div style="margin-top:16px;"><button class="btn" onclick="saveTest()">💾 Save Test</button></div>
       </div>
       <h3 style="color:var(--wine-dark);margin-top:22px;">Available Tests</h3>
       <div class="file-list" id="testList"></div>
+
+      <h3 style="color:var(--wine-dark);margin-top:26px;">📜 Test History</h3>
+      <div id="testHistoryList"></div>
+
+      <h3 style="color:var(--wine-dark);margin-top:26px;">🏆 Leaderboard</h3>
+      <div id="leaderboardList"></div>
     </div>
     <div id="testRunner" style="display:none;"></div>
+  </div>
+</section>
+
+<!-- ============ AI TOOLS ============ -->
+<section class="view" id="aitools">
+  <div class="wrap">
+    <div class="section-title"><h2>🤖 AI Study Buddy</h2><span class="pill-note">Ask · Explain · Summarize</span></div>
+    <div class="test-card" style="margin-bottom:16px;">
+      <h3 style="margin-top:0;color:var(--wine-dark);">Ask AI a Doubt</h3>
+      <textarea id="doubtInput" placeholder="Apna doubt yahan likho..." rows="3" style="width:100%;margin-bottom:10px;"></textarea>
+      <button class="btn" onclick="askDoubt()">💬 Ask AI</button>
+      <div id="doubtAnswer" style="margin-top:14px;"></div>
+    </div>
+    <div class="test-card">
+      <h3 style="margin-top:0;color:var(--wine-dark);">Summarize a Chapter</h3>
+      <textarea id="chapterTextInput" placeholder="Chapter ka text / notes paste karo, AI usko summarize kar dega" rows="4" style="width:100%;margin-bottom:10px;"></textarea>
+      <button class="btn" onclick="summarizeChapter()">📖 Summarize</button>
+      <div id="chapterSummary" style="margin-top:14px;"></div>
+    </div>
   </div>
 </section>
 
@@ -484,6 +631,90 @@ footer{text-align:center;padding:28px 0;color:var(--text-soft);font-size:12px;}
       </div>
       <div id="jitsi-container"></div>
     </div>
+  </div>
+</section>
+
+<!-- ============ US (mood, journal, gallery, messages) ============ -->
+<section class="view" id="us">
+  <div class="wrap">
+    <div class="section-title"><h2>💞 Us</h2><span class="pill-note">Private — sirf dono ke liye</span></div>
+
+    <h3 style="color:var(--wine-dark);">😊 Aaj ka Mood</h3>
+    <div class="mood-row" id="moodRow"></div>
+    <div id="moodSupportBox"></div>
+
+    <h3 style="color:var(--wine-dark);margin-top:28px;">🌱 Habit Tracker</h3>
+    <div class="grid">
+      <div class="habit-card">
+        <h4>💧 Water Intake</h4>
+        <div class="water-row">
+          <button class="water-btn" onclick="adjustWater(-1)">−</button>
+          <span id="waterCount" style="font-size:22px;font-weight:700;color:var(--wine);">0</span>
+          <span style="color:var(--text-soft);font-size:12px;">glasses</span>
+          <button class="water-btn" onclick="adjustWater(1)">+</button>
+        </div>
+      </div>
+      <div class="habit-card">
+        <h4>🌙 Sleep Hours</h4>
+        <input type="number" id="sleepInput" min="0" max="14" step="0.5" placeholder="e.g. 7" onchange="saveSleep(this.value)">
+      </div>
+      <div class="habit-card">
+        <h4>🏃 Exercise Today?</h4>
+        <div class="row">
+          <button class="btn ghost small" id="exYesBtn" onclick="setExercise(true)">✅ Haan</button>
+          <button class="btn ghost small" id="exNoBtn" onclick="setExercise(false)">❌ Nahi</button>
+        </div>
+      </div>
+    </div>
+
+    <h3 style="color:var(--wine-dark);margin-top:28px;">📖 Daily Journal</h3>
+    <div class="add-form" style="margin-bottom:16px;">
+      <div class="row" style="margin-bottom:8px;"><textarea id="journalStudied" placeholder="Aaj kya padha?" rows="2" style="width:100%;"></textarea></div>
+      <div class="row" style="margin-bottom:8px;"><textarea id="journalAchieve" placeholder="Aaj ki achievement / accha kya laga?" rows="2" style="width:100%;"></textarea></div>
+      <div class="row" style="margin-bottom:8px;"><textarea id="journalChallenge" placeholder="Sabse mushkil kya laga?" rows="2" style="width:100%;"></textarea></div>
+      <div class="row" style="margin-bottom:8px;"><textarea id="journalGoal" placeholder="Kal ka goal" rows="2" style="width:100%;"></textarea></div>
+      <button class="btn" onclick="addJournalEntry()">💾 Save Today's Entry</button>
+    </div>
+    <div id="journalList"></div>
+
+    <h3 style="color:var(--wine-dark);margin-top:28px;">📸 Memory Gallery</h3>
+    <div class="row" style="margin-bottom:14px;">
+      <input type="file" id="galleryFile" accept="image/*">
+      <input type="text" id="galleryCaption" placeholder="Caption likho (optional)" style="min-width:220px;">
+      <button class="btn" onclick="addGalleryPhoto()">📷 Add to Gallery</button>
+      <span id="galleryMsg" style="font-size:12px;color:var(--text-soft);"></span>
+    </div>
+    <div id="onThisDayBox"></div>
+    <div class="gallery-grid" id="galleryGrid"></div>
+
+    <h3 style="color:var(--wine-dark);margin-top:28px;">🤗 Send a Hug</h3>
+    <div class="card" style="text-align:center;padding:24px;">
+      <p style="color:var(--text-soft);font-size:13px;margin-bottom:14px;">Bas ek click mein pyaar bhejo — turant dusri taraf dikhega.</p>
+      <button class="hug-btn" onclick="sendHug()">🤗 Send a Virtual Hug</button>
+      <p style="margin-top:14px;font-size:12.5px;color:var(--text-soft);" id="hugCountText">0 hugs bheje gaye ab tak</p>
+      <div id="hugReceivedBox"></div>
+    </div>
+
+    <h3 style="color:var(--wine-dark);margin-top:28px;">💌 Love Wall</h3>
+    <div class="add-form admin-only" style="margin-bottom:16px;">
+      <h3>Write a Note</h3>
+      <div class="row" style="margin-bottom:8px;">
+        <textarea id="noteText" placeholder="Apna message likho..." rows="2" style="width:100%;"></textarea>
+      </div>
+      <div class="row">
+        <select id="noteType">
+          <option value="general">💌 General</option>
+          <option value="morning">🌅 Good Morning</option>
+          <option value="night">🌙 Good Night</option>
+          <option value="secret">🔒 Secret Letter</option>
+        </select>
+        <label style="font-size:12.5px;color:var(--text-soft);">Kab unlock ho?</label>
+        <input type="date" id="noteDate">
+        <button class="btn" onclick="addSurpriseNote()">💌 Pin to Wall</button>
+      </div>
+      <p style="font-size:11.5px;color:var(--text-soft);margin-top:6px;">Aaj ki date daalo to abhi dikhega, future date daalo to wo tab tak 🎁 locked rahega.</p>
+    </div>
+    <div class="wall-grid" id="loveWallGrid"></div>
   </div>
 </section>
 
@@ -538,6 +769,106 @@ async function pGet(key,fallback){return rawGet(key,false,fallback);}
 function uid(){return Math.random().toString(36).slice(2,10);}
 function escapeHtml(s){return (s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
+/* ================= AI HELPER (uses YOUR OWN API key — set in ⚙️ AI Settings) ================= */
+if(window.pdfjsLib){pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';}
+async function getAiConfig(){
+  const provider=await pGet('ai:provider','anthropic');
+  const key=await pGet('ai:apiKey','');
+  return {provider,key};
+}
+async function askAI(userText,systemText){
+  const {provider,key}=await getAiConfig();
+  if(!key){return {ok:false,text:null,reason:'no-key'};}
+  try{
+    if(provider==='openai'){
+      const res=await fetch('https://api.openai.com/v1/chat/completions',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+        body:JSON.stringify({
+          model:'gpt-4o-mini',
+          messages:[{role:'system',content:systemText||''},{role:'user',content:userText}]
+        })
+      });
+      const data=await res.json();
+      if(data.error)return {ok:false,text:null,reason:data.error.message||'error'};
+      return {ok:true,text:(data.choices&&data.choices[0]&&data.choices[0].message.content)||null};
+    }else{
+      const res=await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json',
+          'x-api-key':key,
+          'anthropic-version':'2023-06-01',
+          'anthropic-dangerous-direct-browser-access':'true'
+        },
+        body:JSON.stringify({
+          model:'claude-3-5-sonnet-20241022',max_tokens:2000,
+          system:systemText||'',
+          messages:[{role:'user',content:userText}]
+        })
+      });
+      const data=await res.json();
+      if(data.error)return {ok:false,text:null,reason:data.error.message||'error'};
+      if(data && data.content){return {ok:true,text:data.content.map(b=>b.text||'').join('\n').trim()};}
+      return {ok:false,text:null,reason:'empty response'};
+    }
+  }catch(e){console.error('AI call failed',e);return {ok:false,text:null,reason:'network error — CORS ya internet check karo'};}
+}
+function extractJsonArray(text){
+  if(!text)return null;
+  const cleaned=text.replace(/```json|```/g,'').trim();
+  const start=cleaned.indexOf('[');
+  const end=cleaned.lastIndexOf(']');
+  if(start===-1||end===-1)return null;
+  try{return JSON.parse(cleaned.slice(start,end+1));}catch(e){return null;}
+}
+async function extractPdfText(file){
+  const buf=await file.arrayBuffer();
+  const pdf=await pdfjsLib.getDocument({data:buf}).promise;
+  let text='';
+  for(let p=1;p<=Math.min(pdf.numPages,25);p++){
+    const page=await pdf.getPage(p);
+    const content=await page.getTextContent();
+    text+=content.items.map(it=>it.str).join(' ')+'\n';
+  }
+  return text.slice(0,18000);
+}
+
+/* ================= AI SETTINGS ================= */
+async function openAiSettings(){
+  const cfg=await getAiConfig();
+  document.getElementById('modalBody').innerHTML=`
+    <h3>⚙️ AI Settings</h3>
+    <p style="color:var(--text-soft);font-size:12.5px;">Ye key sirf <b>is browser/device</b> mein save hoti hai (kabhi bhi shared cloud database mein nahi jaati). PDF→MCQ, Explain Question jaise features iske bina "AI key add karo" dikhayenge.</p>
+    <p style="color:#c14a35;font-size:12px;">⚠️ Chunki ye ek static website hai (no secret server), key browser mein hi rehti hai. Sirf apna trusted device pe hi daalo, aur billing limit set karke rakho apne provider account mein.</p>
+    <div class="row" style="margin:14px 0;">
+      <select id="aiProviderSel">
+        <option value="anthropic" ${cfg.provider==='anthropic'?'selected':''}>Anthropic (Claude)</option>
+        <option value="openai" ${cfg.provider==='openai'?'selected':''}>OpenAI (GPT)</option>
+      </select>
+    </div>
+    <input type="text" id="aiKeyInput" placeholder="Apni API key paste karo" value="${escapeHtml(cfg.key)}" style="width:100%;margin-bottom:12px;">
+    <div class="row">
+      <button class="btn" onclick="saveAiSettings()">💾 Save</button>
+      <button class="btn danger ghost" onclick="clearAiSettings()">🗑 Remove Key</button>
+    </div>
+    <p style="color:var(--text-soft);font-size:11.5px;margin-top:14px;">Anthropic key: console.anthropic.com se banao. OpenAI key: platform.openai.com se.</p>
+  `;
+  document.getElementById('modalBg').classList.add('show');
+}
+async function saveAiSettings(){
+  const provider=document.getElementById('aiProviderSel').value;
+  const key=document.getElementById('aiKeyInput').value.trim();
+  await pSet('ai:provider',provider);
+  await pSet('ai:apiKey',key);
+  closeModal();
+  alert(key?'✅ AI key save ho gayi!':'Key khali chhodi — AI features tab tak disabled rahenge.');
+}
+async function clearAiSettings(){
+  await pSet('ai:apiKey','');
+  closeModal();
+}
+
 /* ================= AMBIENT HEARTS + CONFETTI ================= */
 const heartsWrap=document.getElementById('hearts');
 const ambientSymbols=['❤','❤','❤','🦋','🦋'];
@@ -558,18 +889,6 @@ function setRoleLocal(r){localStorage.setItem('drsakshi_role',r);}
 function clearRoleLocal(){localStorage.removeItem('drsakshi_role');}
 
 async function loginAsAdmin(){
-  let storedPass=await sGet('auth:adminPassword',null);
-  if(!storedPass){
-    const p1=prompt('Pehli baar hai — apna Admin password set karo (yaad rakhna):');
-    if(!p1)return;
-    const ok=await sSet('auth:adminPassword',p1);
-    if(!ok){alert('Password save nahi ho paya, dobara try karo.');return;}
-    storedPass=p1;
-  }else{
-    const p=prompt('Admin password daalo:');
-    if(p===null)return;
-    if(p!==storedPass){alert('Galat password.');return;}
-  }
   setRoleLocal('admin');
   enterApp('admin');
 }
@@ -599,6 +918,7 @@ function switchTab(id){
   const btn=document.querySelector(`.tab-btn[data-tab="${id}"]`); if(btn)btn.classList.add('active');
   window.scrollTo({top:0,behavior:'smooth'});
   if(id==='progress')renderProgressPage();
+  if(id==='us')renderUsPage();
 }
 document.querySelectorAll('.tab-btn').forEach(b=>b.addEventListener('click',()=>switchTab(b.dataset.tab)));
 
@@ -728,14 +1048,22 @@ async function renderChapters(){
   wrap.innerHTML=list.map(c=>`
     <div class="chapter-row ${c.complete?'complete':''}">
       <button class="check-round ${c.complete?'on':''}" onclick="toggleChapterComplete('${c.id}',event)">${c.complete?'✓':''}</button>
-      <div class="chapter-name ${c.complete?'done':''}">${escapeHtml(c.name)}</div>
+      <div class="chapter-name ${c.complete?'done':''}">${escapeHtml(c.name)} ${c.current?'<span class="tag" style="background:var(--gold);color:#fff;">📖 Currently Studying</span>':''}</div>
       <div class="mini-checks">
         <span class="mini-chip ${c.ncert?'on':''}" onclick="toggleChapterField('${c.id}','ncert')">NCERT</span>
         <span class="mini-chip ${c.notesDone?'on':''}" onclick="toggleChapterField('${c.id}','notesDone')">Notes</span>
         <span class="mini-chip ${c.revised?'on':''}" onclick="toggleChapterField('${c.id}','revised')">Revised</span>
       </div>
+      <button class="btn ghost small" onclick="setCurrentChapter('${c.id}')" title="Mark as currently studying">📌</button>
       <button class="btn danger small admin-only" onclick="deleteChapter('${c.id}')">🗑</button>
     </div>`).join('');
+}
+async function setCurrentChapter(id){
+  const list=await sGet('syllabus:'+activeSubject,[]);
+  list.forEach(c=>c.current=(c.id===id));
+  await sSet('syllabus:'+activeSubject,list);
+  await sSet('currentlyStudying',{subject:activeSubject,name:list.find(c=>c.id===id).name,ts:Date.now()});
+  renderChapters();updateHomeStats();
 }
 async function toggleChapterField(id,field){
   const list=await sGet('syllabus:'+activeSubject,[]);
@@ -828,27 +1156,47 @@ async function deleteDpp(id){
   await sSet('dpp:'+activeDppSubject,list.filter(x=>x.id!==id));
   renderDppList();updateHomeStats();
 }
+function openSolutionUploadModal(saveCallback){
+  document.getElementById('modalBody').innerHTML=`
+    <h3>📤 Upload Solution</h3>
+    <p style="color:var(--text-soft);font-size:12.5px;">PDF ya image (~3MB tak) seedha upload karo, ya niche link paste karo.</p>
+    <div class="row" style="margin:14px 0;">
+      <input type="file" id="solutionFileInput" accept=".pdf,application/pdf,image/*">
+    </div>
+    <p style="text-align:center;color:var(--text-soft);font-size:11.5px;margin:6px 0;">— or —</p>
+    <input type="url" id="solutionLinkInput" placeholder="Paste link instead (Drive, etc.)" style="width:100%;margin-bottom:14px;">
+    <div class="row"><button class="btn" onclick="submitSolutionUpload()">💾 Save Solution</button></div>
+    <span id="solutionModalMsg" style="font-size:12px;color:var(--text-soft);display:block;margin-top:8px;"></span>
+  `;
+  window.__solutionSaveCallback=saveCallback;
+  document.getElementById('modalBg').classList.add('show');
+}
+async function submitSolutionUpload(){
+  const fileInput=document.getElementById('solutionFileInput');
+  const link=document.getElementById('solutionLinkInput').value.trim();
+  const msg=document.getElementById('solutionModalMsg');
+  if(fileInput.files.length){
+    const f=fileInput.files[0];
+    if(f.size>3.2*1024*1024){msg.textContent='⚠️ File 3MB se badi hai — link use karo.';msg.style.color='#c14a35';return;}
+    msg.textContent='Uploading...';msg.style.color='var(--text-soft)';
+    const b64=await fileToBase64(f);
+    await window.__solutionSaveCallback({id:uid(),type:'file',fileName:f.name,data:b64,ts:Date.now()});
+  }else if(link){
+    await window.__solutionSaveCallback({id:uid(),type:'link',link,ts:Date.now()});
+  }else{
+    msg.textContent='File choose karo ya link paste karo.';msg.style.color='#c14a35';return;
+  }
+  closeModal();
+}
 async function uploadDppSolution(id){
   const list=await sGet('dpp:'+activeDppSubject,[]);
   const item=list.find(x=>x.id===id); if(!item)return;
-  const choice=prompt('Solution ke liye link paste karo. Chhoti file ke liye "file" likho:');
-  if(choice===null)return;
-  if(choice.trim().toLowerCase()==='file'){
-    const inp=document.createElement('input');inp.type='file';
-    inp.onchange=async()=>{
-      const f=inp.files[0]; if(!f)return;
-      if(f.size>3.2*1024*1024){alert('File badi hai (>3MB). Link use karo.');return;}
-      const b64=await fileToBase64(f);
-      item.answers=item.answers||[];
-      item.answers.push({id:uid(),type:'file',fileName:f.name,data:b64,ts:Date.now()});
-      await sSet('dpp:'+activeDppSubject,list);renderDppList();
-    };
-    inp.click();
-  }else if(choice.trim()){
+  openSolutionUploadModal(async(entry)=>{
     item.answers=item.answers||[];
-    item.answers.push({id:uid(),type:'link',link:choice.trim(),ts:Date.now()});
-    await sSet('dpp:'+activeDppSubject,list);renderDppList();
-  }
+    item.answers.push(entry);
+    await sSet('dpp:'+activeDppSubject,list);
+    renderDppList();
+  });
 }
 
 /* ================= NOTES LIBRARY ================= */
@@ -970,28 +1318,19 @@ async function deleteGeneric(cat,id){
 async function uploadAnswer(id){
   const list=await sGet('items:'+activeCat,[]);
   const idx=list.findIndex(i=>i.id===id); if(idx<0)return;
-  const choice=prompt('Answer ke liye link paste karo. Chhoti file ke liye "file" likho:');
-  if(choice===null)return;
-  if(choice.trim().toLowerCase()==='file'){
-    const inp=document.createElement('input');inp.type='file';
-    inp.onchange=async()=>{
-      const f=inp.files[0]; if(!f)return;
-      if(f.size>3.2*1024*1024){alert('File badi hai (>3MB). Link use karo.');return;}
-      const b64=await fileToBase64(f);
-      list[idx].answers=list[idx].answers||[];
-      list[idx].answers.push({id:uid(),type:'file',fileName:f.name,data:b64,ts:Date.now()});
-      await sSet('items:'+activeCat,list);renderFileList();
-    };
-    inp.click();
-  }else if(choice.trim()){
+  openSolutionUploadModal(async(entry)=>{
     list[idx].answers=list[idx].answers||[];
-    list[idx].answers.push({id:uid(),type:'link',link:choice.trim(),ts:Date.now()});
-    await sSet('items:'+activeCat,list);renderFileList();
-  }
+    list[idx].answers.push(entry);
+    await sSet('items:'+activeCat,list);
+    renderFileList();
+  });
 }
 
 /* ================= HOME STATS + LOVE METER ================= */
 async function updateHomeStats(){
+  renderStoryChapter();
+  const current=await sGet('currentlyStudying',null);
+  document.getElementById('currentStudyText').textContent=current?`${current.subject} — ${current.name}`:'Kuch bhi pin nahi hua abhi — Syllabus mein 📌 dabao.';
   let totalChapters=0,doneChapters=0;
   for(const s of SUBJECTS){const list=await sGet('syllabus:'+s,[]);totalChapters+=list.length;doneChapters+=list.filter(c=>c.complete).length;}
   document.getElementById('homeSyllabusText').textContent=totalChapters?doneChapters+' of '+totalChapters+' chapters complete':'Nothing added yet';
@@ -1017,6 +1356,38 @@ async function updateHomeStats(){
   const level=Math.max(1,Math.floor(lovePoints/15)+1);
   const labels=['Just getting started','Building momentum','Growing stronger together','Unstoppable duo','White coat almost there ❤️'];
   document.getElementById('loveLvl').textContent='Level '+level+' — '+labels[Math.min(labels.length-1,level-1)];
+
+  /* dashboard strip */
+  renderGreeting();
+  const goal=await sGet('today:goal',null);
+  document.getElementById('goalText').textContent=(goal && goal.date===todayStr()) ? goal.text : 'Aaj ka goal set nahi hua.';
+  const todayPct=slots.length?Math.round(doneSlots/slots.length*100):0;
+  const circumference=264;
+  document.getElementById('ringProgress').style.strokeDashoffset=circumference-(circumference*todayPct/100);
+  document.getElementById('ringText').textContent=todayPct+'%';
+  const log=await sGet('activity:log',[]);
+  document.getElementById('dashStreakNum').textContent=computeStreak(log);
+  const calWrap=document.getElementById('miniCal');
+  const set=new Set(log);
+  let calHtml='';
+  for(let i=6;i>=0;i--){
+    const d=new Date();d.setDate(d.getDate()-i);
+    const key=d.toISOString().slice(0,10);
+    const active=set.has(key);
+    calHtml+=`<div class="dot ${active?'active':''}" title="${key}">${d.getDate()}</div>`;
+  }
+  calWrap.innerHTML=calHtml;
+}
+function renderGreeting(){
+  const h=new Date().getHours();
+  const g=h<12?'Good Morning':h<17?'Good Afternoon':h<21?'Good Evening':'Good Night';
+  document.getElementById('greetText').textContent=`${g}, Sakshi 👋`;
+}
+async function setTodayGoal(){
+  const text=prompt('Aaj ka goal kya hai?');
+  if(text===null || !text.trim())return;
+  await sSet('today:goal',{text:text.trim(),date:todayStr()});
+  updateHomeStats();
 }
 
 /* ================= PROGRESS PAGE (streak + badges + mistakes) ================= */
@@ -1045,28 +1416,75 @@ async function renderProgressPage(){
 
   renderMistakes();
 }
+function setMistakeFilterBtn(bm){
+  document.getElementById('mistakeAllBtn').classList.toggle('active',!bm);
+  document.getElementById('mistakeBmBtn').classList.toggle('active',bm);
+}
+async function autoCaptureMistakes(t,answers,role){
+  const wrong=[];
+  t.questions.forEach((q,i)=>{
+    if(answers[i]!==null && answers[i]!==q.correct){
+      wrong.push({
+        id:uid(),q:q.text,sol:q.options[q.correct],reason:'',
+        options:q.options,correct:q.correct,userAnswer:answers[i],
+        concept:q.subject||'General',explanation:q.explanation||'',
+        source:'test',testName:t.name,bookmarked:false,retried:false,ts:Date.now()
+      });
+    }
+  });
+  if(!wrong.length)return;
+  const list=await sGet('mistakes:all',[]);
+  await sSet('mistakes:all',[...wrong,...list]);
+}
 async function addMistake(){
   const q=document.getElementById('mistakeQ').value.trim();
   const sol=document.getElementById('mistakeSol').value.trim();
   const reason=document.getElementById('mistakeReason').value.trim();
   if(!q||!sol){alert('Question aur solution dono likho.');return;}
   const list=await sGet('mistakes:all',[]);
-  list.unshift({id:uid(),q,sol,reason,ts:Date.now()});
+  list.unshift({id:uid(),q,sol,reason,source:'manual',bookmarked:false,ts:Date.now()});
   await sSet('mistakes:all',list);
   document.getElementById('mistakeQ').value='';document.getElementById('mistakeSol').value='';document.getElementById('mistakeReason').value='';
   renderMistakes();
 }
-async function renderMistakes(){
-  const list=await sGet('mistakes:all',[]);
+async function renderMistakes(onlyBookmarked){
+  let list=await sGet('mistakes:all',[]);
+  if(onlyBookmarked)list=list.filter(m=>m.bookmarked);
   const wrap=document.getElementById('mistakeList');
   if(!list.length){wrap.innerHTML='<div class="empty-state">Koi mistake note nahi hui abhi — accha hai! 🎉</div>';return;}
   wrap.innerHTML=list.map(m=>`
     <div class="mistake-item">
-      <div class="lbl">Question</div><div>${escapeHtml(m.q)}</div>
-      <div class="lbl">Correct Solution</div><div>${escapeHtml(m.sol)}</div>
+      <div class="lbl">${m.source==='test'?'📝 From: '+escapeHtml(m.testName||'Test'):'Manual Entry'} ${m.concept?`<span class="tag">${escapeHtml(m.concept)}</span>`:''}</div>
+      <div class="lbl" style="margin-top:8px;">Question</div><div>${escapeHtml(m.q)}</div>
+      <div class="lbl">Correct Answer</div><div style="color:var(--good);">${escapeHtml(m.sol)}</div>
       ${m.reason?`<div class="lbl">Reason</div><div>${escapeHtml(m.reason)}</div>`:''}
-      <div class="row" style="margin-top:10px;"><button class="btn danger small" onclick="deleteMistake('${m.id}')">🗑 Remove</button></div>
+      <div id="retryBox-${m.id}"></div>
+      <div class="row" style="margin-top:10px;">
+        ${m.options?`<button class="btn ghost small" onclick="retryMistake('${m.id}')">🔁 Retry</button>`:''}
+        <button class="btn ${m.bookmarked?'':'ghost'} small" onclick="toggleBookmarkMistake('${m.id}')">${m.bookmarked?'🔖 Bookmarked':'🔖 Bookmark'}</button>
+        <button class="btn danger small" onclick="deleteMistake('${m.id}')">🗑 Remove</button>
+      </div>
     </div>`).join('');
+}
+async function retryMistake(id){
+  const list=await sGet('mistakes:all',[]);
+  const m=list.find(x=>x.id===id); if(!m || !m.options)return;
+  const box=document.getElementById('retryBox-'+id);
+  box.innerHTML=m.options.map((o,j)=>`<button type="button" class="q-opt" onclick="checkRetry('${id}',${j},this)">${String.fromCharCode(65+j)}. ${escapeHtml(o)}</button>`).join('');
+}
+async function checkRetry(id,idx,btn){
+  const list=await sGet('mistakes:all',[]);
+  const m=list.find(x=>x.id===id); if(!m)return;
+  const box=document.getElementById('retryBox-'+id);
+  box.querySelectorAll('.q-opt').forEach((b,j)=>{if(j===m.correct)b.classList.add('correct');else if(b===btn)b.classList.add('wrong');b.onclick=null;});
+  if(idx===m.correct){m.retried=true;await sSet('mistakes:all',list);burstConfetti(window.innerWidth/2,300);}
+}
+async function toggleBookmarkMistake(id){
+  const list=await sGet('mistakes:all',[]);
+  const m=list.find(x=>x.id===id); if(!m)return;
+  m.bookmarked=!m.bookmarked;
+  await sSet('mistakes:all',list);
+  renderMistakes();
 }
 async function deleteMistake(id){
   const list=await sGet('mistakes:all',[]);
@@ -1123,86 +1541,395 @@ async function renderDailyPhoto(){
   }
 }
 
-/* ================= WEEKLY TEST ================= */
+/* ================= AI: PDF/TEXT -> MCQ ================= */
+async function generateMcqFromPdf(){
+  const nameField=document.getElementById('aiTestName');
+  const subj=document.getElementById('aiTestSubject').value;
+  const fileInput=document.getElementById('aiPdfFile');
+  const pasted=document.getElementById('aiPastedText').value.trim();
+  const msg=document.getElementById('aiGenMsg');
+  let text='';
+  if(fileInput.files.length){
+    msg.textContent='📄 PDF padh rahe hain...';msg.style.color='var(--text-soft)';
+    try{text=await extractPdfText(fileInput.files[0]);}
+    catch(e){msg.textContent='PDF read nahi ho payi.';msg.style.color='#c14a35';return;}
+  }else if(pasted){text=pasted;}
+  else{msg.textContent='PDF upload karo ya text paste karo.';msg.style.color='#c14a35';return;}
+  if(!text.trim()){msg.textContent='Is file/text mein kuch mila nahi.';msg.style.color='#c14a35';return;}
+
+  msg.textContent='🤖 AI questions detect kar rahi hai...';msg.style.color='var(--text-soft);';
+  const sys='You are an expert NEET exam question extractor. Given raw text from a question paper, extract every multiple-choice question you can find. For each question, provide exactly 4 options. If the source text contains an answer key, use it to set the correct option index (0-3). If no answer key is present, use your own subject knowledge (Biology/Physics/Chemistry, NEET level) to determine the single best correct option yourself — never leave it null. Respond with ONLY a raw JSON array, no markdown, no explanation, in this exact shape: [{"text":"question text","options":["A","B","C","D"],"correct":0}]. Extract at most 20 questions.';
+  const {ok,text:out,reason}=await askAI(text,sys);
+  if(!ok){
+    if(reason==='no-key'){msg.innerHTML='❌ AI key set nahi hai. <button class="btn ghost small" onclick="openAiSettings()">⚙️ AI Settings kholo</button>';}
+    else{msg.textContent='❌ AI call fail ho gaya: '+reason;msg.style.color='#c14a35';}
+    return;
+  }
+  const parsed=extractJsonArray(out);
+  if(!parsed || !parsed.length){
+    msg.textContent='❌ AI se questions extract nahi ho paye. Text clearer try karo ya manually add karo.';msg.style.color='#c14a35';
+    return;
+  }
+  builderQuestions=parsed.filter(q=>q.text && Array.isArray(q.options) && q.options.length===4).map(q=>({
+    id:uid(),text:q.text,options:q.options,correct:(typeof q.correct==='number'&&q.correct>=0&&q.correct<=3)?q.correct:0,subject:subj
+  }));
+  renderBuilder();
+  document.getElementById('testName').value=nameField.value.trim()||('AI Test - '+new Date().toLocaleDateString());
+  document.getElementById('testSubject').value=subj;
+  msg.textContent=`✅ ${builderQuestions.length} questions ban gaye! Neeche review karke "Save Test" dabao.`;msg.style.color='var(--good)';
+  document.getElementById('qBuilderList').scrollIntoView({behavior:'smooth'});
+}
+
+/* ================= DYNAMIC STORY CHAPTER (fiction theme) ================= */
+const storyChapters=[
+  'The Journey Begins','Finding the Rhythm','Building Momentum','Facing the Hard Chapters',
+  'The Revision Arc','Testing Her Strength','Growing Stronger Together','The Home Stretch',
+  'Almost There','The Final Push Before Victory'
+];
+async function renderStoryChapter(){
+  const log=await sGet('activity:log',[]);
+  const day=Math.max(1,log.length);
+  const chapterIdx=Math.min(storyChapters.length-1,Math.floor((day-1)/5));
+  const badge=document.getElementById('storyChapterBadge');
+  if(badge)badge.textContent=`📖 Chapter ${chapterIdx+1}: ${storyChapters[chapterIdx]}`;
+}
+
+/* ================= WEEKLY TEST BUILDER ================= */
 let builderQuestions=[];
-function addBuilderQuestion(){builderQuestions.push({id:uid(),text:'',options:['','','',''],correct:0});renderBuilder();}
+function addBuilderQuestion(){builderQuestions.push({id:uid(),text:'',options:['','','',''],correct:0,subject:'Biology'});renderBuilder();}
 function renderBuilder(){
   document.getElementById('qBuilderList').innerHTML=builderQuestions.map((q,i)=>`
     <div class="qform">
       <b>Q${i+1}</b>
       <div class="row" style="margin:6px 0;"><input type="text" style="width:100%" placeholder="Question text" value="${escapeHtml(q.text)}" oninput="builderQuestions[${i}].text=this.value"></div>
       ${q.options.map((o,j)=>`<div class="opt-row"><input type="radio" name="correct-${q.id}" ${q.correct===j?'checked':''} onchange="builderQuestions[${i}].correct=${j}"><input type="text" placeholder="Option ${String.fromCharCode(65+j)}" value="${escapeHtml(o)}" oninput="builderQuestions[${i}].options[${j}]=this.value"></div>`).join('')}
-      <button class="btn danger small" onclick="removeBuilderQ(${i})">Remove Question</button>
+      <div class="row" style="margin-top:6px;">
+        <select onchange="builderQuestions[${i}].subject=this.value" style="font-size:12px;">
+          ${['Biology','Physics','Chemistry'].map(s=>`<option ${q.subject===s?'selected':''}>${s}</option>`).join('')}
+        </select>
+        <button class="btn danger small" onclick="removeBuilderQ(${i})">Remove Question</button>
+      </div>
     </div>`).join('');
 }
 function removeBuilderQ(i){builderQuestions.splice(i,1);renderBuilder();}
 async function saveTest(){
   const name=document.getElementById('testName').value.trim();
   const mins=parseInt(document.getElementById('testMinutes').value)||30;
+  const subject=document.getElementById('testSubject').value;
   const link=document.getElementById('testPaperLink').value.trim();
+  const schedule=document.getElementById('testSchedule').value||null;
   if(!name){alert('Test ka naam do.');return;}
   if(!builderQuestions.length){alert('Kam se kam ek question add karo.');return;}
   for(const q of builderQuestions){if(!q.text.trim()||q.options.some(o=>!o.trim())){alert('Har question ke sabhi options aur text bharo.');return;}}
   const tests=await sGet('tests:saved',[]);
-  tests.unshift({id:uid(),name,mins,link,questions:JSON.parse(JSON.stringify(builderQuestions)),ts:Date.now()});
+  tests.unshift({id:uid(),name,mins,subject,link,schedule,locked:false,questions:JSON.parse(JSON.stringify(builderQuestions)),ts:Date.now()});
   await sSet('tests:saved',tests);
   builderQuestions=[];renderBuilder();
-  document.getElementById('testName').value='';document.getElementById('testPaperLink').value='';
+  document.getElementById('testName').value='';document.getElementById('testPaperLink').value='';document.getElementById('testSchedule').value='';
   renderTestList();updateHomeStats();
 }
 async function renderTestList(){
   const tests=await sGet('tests:saved',[]);
   const wrap=document.getElementById('testList');
   if(!tests.length){wrap.innerHTML='<div class="empty-state">Koi test save nahi hua abhi.</div>';return;}
-  wrap.innerHTML=tests.map(t=>`
+  wrap.innerHTML=tests.map(t=>{
+    const notYet=t.schedule && new Date(t.schedule)>new Date();
+    return `
     <div class="file-item">
-      <div class="file-info"><b>${escapeHtml(t.name)}</b><span><span class="tag">${t.questions.length} Qs</span> · ${t.mins} min ${t.link?`· <a href="${t.link}" target="_blank">Paper PDF ↗</a>`:''}</span></div>
-      <div class="file-actions"><button class="btn small" onclick="startTest('${t.id}')">▶ Start Test</button><button class="btn danger small admin-only" onclick="deleteTest('${t.id}')">🗑</button></div>
-    </div>`).join('');
+      <div class="file-info">
+        <b>${escapeHtml(t.name)}</b>
+        <span><span class="tag">${t.questions.length} Qs</span> <span class="tag">${t.subject||'Mixed'}</span> · ${t.mins} min ${t.link?`· <a href="${t.link}" target="_blank">Paper PDF ↗</a>`:''} ${t.locked?'<span class="tag" style="background:#c14a35;color:#fff;">🔒 Locked</span>':''} ${notYet?`<span class="tag" style="background:var(--gold);color:#fff;">⏰ Unlocks ${new Date(t.schedule).toLocaleString()}</span>`:''}</span>
+      </div>
+      <div class="file-actions">
+        <button class="btn small" onclick="startTest('${t.id}')" ${t.locked||notYet?'disabled':''}>▶ Start Test</button>
+        <button class="btn ghost small admin-only" onclick="toggleLockTest('${t.id}')">${t.locked?'🔓 Unlock':'🔒 Lock'}</button>
+        <button class="btn danger small admin-only" onclick="deleteTest('${t.id}')">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+async function toggleLockTest(id){
+  const tests=await sGet('tests:saved',[]);
+  const t=tests.find(x=>x.id===id); if(!t)return;
+  t.locked=!t.locked;
+  await sSet('tests:saved',tests);
+  renderTestList();
 }
 async function deleteTest(id){const tests=await sGet('tests:saved',[]);await sSet('tests:saved',tests.filter(t=>t.id!==id));renderTestList();updateHomeStats();}
-let timerInterval=null;
+
+/* ================= EXAM RUNNER ================= */
+let timerInterval=null,autosaveInterval=null;
+let examState=null; // {test, answers, marked, visited, index, secondsLeft, qStartTs, timePerQ}
+
 async function startTest(id){
   const tests=await sGet('tests:saved',[]);
   const t=tests.find(x=>x.id===id); if(!t)return;
-  document.getElementById('testBuilder').style.display='none';
-  const runner=document.getElementById('testRunner'); runner.style.display='block';
-  let secondsLeft=t.mins*60;
-  const answers=new Array(t.questions.length).fill(null);
-  function renderQuestions(){
-    return t.questions.map((q,i)=>`<div class="q-live"><div class="qnum">Question ${i+1} of ${t.questions.length}</div><p style="font-size:15px;font-weight:500;">${escapeHtml(q.text)}</p>${q.options.map((o,j)=>`<button type="button" class="q-opt" data-q="${i}" data-o="${j}" onclick="selectOpt(${i},${j})">${String.fromCharCode(65+j)}. ${escapeHtml(o)}</button>`).join('')}</div>`).join('');
-  }
-  runner.innerHTML=`<div class="timer-badge" id="timerBadge">⏱ 00:00</div>${renderQuestions()}<button class="btn" onclick="submitTest()">Submit Test</button>`;
-  window.selectOpt=(qi,oi)=>{answers[qi]=oi;document.querySelectorAll(`.q-opt[data-q="${qi}"]`).forEach(b=>b.classList.remove('selected'));document.querySelector(`.q-opt[data-q="${qi}"][data-o="${oi}"]`).classList.add('selected');};
-  function tick(){
-    const m=String(Math.floor(secondsLeft/60)).padStart(2,'0'),s=String(secondsLeft%60).padStart(2,'0');
-    const badge=document.getElementById('timerBadge');
-    if(badge){badge.textContent='⏱ '+m+':'+s;badge.classList.toggle('warn',secondsLeft<=60);}
-    if(secondsLeft<=0){clearInterval(timerInterval);submitTest();return;}
-    secondsLeft--;
-  }
-  tick();timerInterval=setInterval(tick,1000);
-  window.submitTest=async function(){
-    clearInterval(timerInterval);
-    let score=0;
-    t.questions.forEach((q,i)=>{
-      document.querySelectorAll(`.q-opt[data-q="${i}"]`).forEach((b,j)=>{if(j===q.correct)b.classList.add('correct');else if(j===answers[i])b.classList.add('wrong');b.onclick=null;});
-      if(answers[i]===q.correct)score++;
-    });
-    const btn=document.querySelector('#testRunner button.btn'); if(btn)btn.style.display='none';
-    const results=await sGet('tests:results',[]);
-    results.unshift({id:uid(),testName:t.name,score,total:t.questions.length,ts:Date.now()});
-    await sSet('tests:results',results);
-    await logActivity();
-    updateHomeStats();
-    setTimeout(()=>{
-      runner.insertAdjacentHTML('afterbegin',`<div class="test-card result-card"><div class="score">${score}/${t.questions.length}</div><p style="color:var(--text-soft);">${t.name} — completed</p><button class="btn ghost" onclick="backToTests()">← Back to Tests</button></div>`);
-      window.scrollTo({top:0,behavior:'smooth'});
-      burstConfetti(window.innerWidth/2,120);
-    },400);
+  if(t.locked){alert('Ye test admin ne lock kiya hua hai.');return;}
+  if(t.schedule && new Date(t.schedule)>new Date()){alert('Ye test abhi unlock nahi hua — scheduled time ka wait karo.');return;}
+
+  const saved=await sGet('testProgress:'+id,null);
+  let resume=false;
+  if(saved){resume=confirm('Pichla incomplete attempt mila — resume karna hai? (Cancel = naya shuru karo)');}
+
+  examState={
+    test:t,
+    answers: resume? saved.answers : new Array(t.questions.length).fill(null),
+    marked: resume? saved.marked : new Array(t.questions.length).fill(false),
+    visited: resume? saved.visited : new Array(t.questions.length).fill(false),
+    index: resume? saved.index : 0,
+    secondsLeft: resume? saved.secondsLeft : t.mins*60,
+    qStartTs: Date.now(),
+    timePerQ: resume? saved.timePerQ : new Array(t.questions.length).fill(0)
   };
+  document.getElementById('testBuilder').style.display='none';
+  const runner=document.getElementById('testRunner');
+  runner.style.display='block';
+  renderExam();
+  timerInterval=setInterval(examTick,1000);
+  autosaveInterval=setInterval(saveExamProgress,10000);
+}
+async function saveExamProgress(){
+  if(!examState)return;
+  await sSet('testProgress:'+examState.test.id,{answers:examState.answers,marked:examState.marked,visited:examState.visited,index:examState.index,secondsLeft:examState.secondsLeft,timePerQ:examState.timePerQ});
+}
+function examTick(){
+  if(!examState)return;
+  examState.secondsLeft--;
+  const badge=document.getElementById('timerBadge');
+  if(badge){
+    const m=String(Math.floor(examState.secondsLeft/60)).padStart(2,'0'),s=String(examState.secondsLeft%60).padStart(2,'0');
+    badge.textContent='⏱ '+m+':'+s;
+    badge.classList.toggle('warn',examState.secondsLeft<=60);
+  }
+  if(examState.secondsLeft<=0){clearInterval(timerInterval);clearInterval(autosaveInterval);submitExam();}
+}
+function toggleFullscreen(){
+  if(!document.fullscreenElement){document.documentElement.requestFullscreen().catch(()=>{});}
+  else{document.exitFullscreen();}
+}
+function trackTimeSpent(){
+  if(!examState)return;
+  const now=Date.now();
+  const spent=Math.round((now-examState.qStartTs)/1000);
+  examState.timePerQ[examState.index]+=spent;
+  examState.qStartTs=now;
+}
+function goToQuestion(i){
+  trackTimeSpent();
+  examState.index=i;
+  examState.visited[i]=true;
+  renderExam();
+}
+function selectAnswer(oi){
+  examState.answers[examState.index]=oi;
+  examState.visited[examState.index]=true;
+  renderExam();
+}
+function toggleMark(){
+  examState.marked[examState.index]=!examState.marked[examState.index];
+  renderExam();
+}
+function clearAnswer(){
+  examState.answers[examState.index]=null;
+  renderExam();
+}
+function renderExam(){
+  const t=examState.test, i=examState.index, q=t.questions[i];
+  const runner=document.getElementById('testRunner');
+  const m=String(Math.floor(examState.secondsLeft/60)).padStart(2,'0'),s=String(examState.secondsLeft%60).padStart(2,'0');
+  runner.innerHTML=`
+    <div class="exam-toolbar">
+      <div class="timer-badge" id="timerBadge">⏱ ${m}:${s}</div>
+      <button class="btn ghost small" onclick="toggleFullscreen()">⛶ Fullscreen</button>
+      <span style="color:var(--text-soft);font-size:12.5px;">${t.name} ${q.subject?`· <span class="tag">${q.subject}</span>`:''}</span>
+    </div>
+    <div class="exam-layout">
+      <div class="q-live">
+        <div class="qnum">Question ${i+1} of ${t.questions.length}</div>
+        <p style="font-size:15px;font-weight:500;">${escapeHtml(q.text)}</p>
+        ${q.options.map((o,j)=>`<button type="button" class="q-opt ${examState.answers[i]===j?'selected':''}" onclick="selectAnswer(${j})">${String.fromCharCode(65+j)}. ${escapeHtml(o)}</button>`).join('')}
+        <div class="row" style="margin-top:14px;">
+          <button class="btn ghost small" onclick="clearAnswer()">Clear Answer</button>
+          <button class="btn ghost small" onclick="toggleMark()">${examState.marked[i]?'🔖 Unmark':'🔖 Mark for Review'}</button>
+          <button class="btn ghost small" onclick="goToQuestion(${Math.max(0,i-1)})" ${i===0?'disabled':''}>← Previous</button>
+          <button class="btn small" onclick="goToQuestion(${Math.min(t.questions.length-1,i+1)})" ${i===t.questions.length-1?'disabled':''}>Next →</button>
+        </div>
+      </div>
+      <div class="exam-sidebar">
+        <b style="color:var(--wine-dark);font-size:13px;">Question Palette</b>
+        <div class="q-palette">
+          ${t.questions.map((_,j)=>{
+            let cls='pal-btn';
+            if(examState.marked[j])cls+=' marked';
+            else if(examState.answers[j]!==null)cls+=' answered';
+            if(j===i)cls+=' current';
+            return `<button class="${cls}" onclick="goToQuestion(${j})">${j+1}</button>`;
+          }).join('')}
+        </div>
+        <div class="legend-row"><span class="legend-dot" style="background:var(--good);"></span>Answered</div>
+        <div class="legend-row"><span class="legend-dot" style="background:var(--gold);"></span>Marked for Review</div>
+        <div class="legend-row"><span class="legend-dot" style="background:var(--bg);border:1px solid var(--line);"></span>Not answered</div>
+        <button class="btn" style="width:100%;margin-top:14px;" onclick="submitExam()">✅ Submit Test</button>
+      </div>
+    </div>`;
+}
+async function submitExam(){
+  clearInterval(timerInterval);clearInterval(autosaveInterval);
+  trackTimeSpent();
+  const t=examState.test;
+  let correct=0,incorrect=0,unattempted=0;
+  const subjectScores={};
+  t.questions.forEach((q,i)=>{
+    const subj=q.subject||'General';
+    subjectScores[subj]=subjectScores[subj]||{correct:0,total:0};
+    subjectScores[subj].total++;
+    if(examState.answers[i]===null){unattempted++;}
+    else if(examState.answers[i]===q.correct){correct++;subjectScores[subj].correct++;}
+    else{incorrect++;}
+  });
+  const accuracy=t.questions.length?Math.round((correct/(correct+incorrect||1))*100):0;
+  const role=(document.body.classList.contains('student-mode'))?'Sakshi':'Admin';
+  const result={
+    id:uid(),testId:t.id,testName:t.name,subject:t.subject,score:correct,total:t.questions.length,
+    correct,incorrect,unattempted,accuracy,subjectScores,
+    questions:t.questions,answers:examState.answers,timePerQ:examState.timePerQ,
+    takenBy:role,ts:Date.now()
+  };
+  const results=await sGet('tests:results',[]);
+  results.unshift(result);
+  await sSet('tests:results',results);
+  await sSet('testProgress:'+t.id,null);
+  await logActivity();
+  await autoCaptureMistakes(t,examState.answers,role);
+  updateHomeStats();
+  renderTestHistory();renderLeaderboard();
+  burstConfetti(window.innerWidth/2,120);
+  renderResultAndSolutions(result);
+}
+function renderResultAndSolutions(result){
+  const runner=document.getElementById('testRunner');
+  runner.innerHTML=`
+    <div class="test-card result-card">
+      <div class="score">${result.score}/${result.total}</div>
+      <p style="color:var(--text-soft);">${escapeHtml(result.testName)} — completed</p>
+    </div>
+    <div class="stat-pills">
+      <div class="stat-pill correct"><b>${result.correct}</b><span>Correct</span></div>
+      <div class="stat-pill wrong"><b>${result.incorrect}</b><span>Incorrect</span></div>
+      <div class="stat-pill skip"><b>${result.unattempted}</b><span>Unattempted</span></div>
+      <div class="stat-pill"><b>${result.accuracy}%</b><span>Accuracy</span></div>
+    </div>
+    <h3 style="color:var(--wine-dark);">Subject-wise Score</h3>
+    <div class="row" style="margin-bottom:16px;">
+      ${Object.entries(result.subjectScores).map(([s,v])=>`<div class="card" style="min-width:140px;"><h3>${s}</h3><p>${v.correct}/${v.total} correct</p></div>`).join('')}
+    </div>
+    <h3 style="color:var(--wine-dark);">Solutions</h3>
+    <div id="solutionsList"></div>
+    <button class="btn ghost" onclick="backToTests()" style="margin-top:14px;">← Back to Tests</button>
+  `;
+  document.getElementById('solutionsList').innerHTML=result.questions.map((q,i)=>{
+    const yourAns=result.answers[i];
+    const time=result.timePerQ[i]||0;
+    return `
+    <div class="sol-block">
+      <div class="qnum">Question ${i+1} ${q.subject?`· <span class="tag">${q.subject}</span>`:''} · ⏱ ${time}s</div>
+      <p style="font-weight:500;">${escapeHtml(q.text)}</p>
+      ${q.options.map((o,j)=>`<div class="q-opt ${j===q.correct?'correct':(j===yourAns?'wrong':'')}" style="cursor:default;">${String.fromCharCode(65+j)}. ${escapeHtml(o)}</div>`).join('')}
+      <div class="yourans" style="color:var(--text-soft);">${yourAns===null?'Unattempted':(yourAns===q.correct?'✅ Aapne sahi answer diya':'❌ Aapka answer galat tha')}</div>
+      <button class="btn ghost small" style="margin-top:8px;" onclick="explainQuestion(${i},this)">🤖 Explain this Question</button>
+      <div class="ai-explain-${i}"></div>
+    </div>`;
+  }).join('');
+  window.currentSolutionResult=result;
+}
+async function explainQuestion(i,btn){
+  const result=window.currentSolutionResult;
+  const q=result.questions[i];
+  btn.textContent='🤖 Soch rahi hai...';btn.disabled=true;
+  const sys='You are a friendly NEET biology/physics/chemistry tutor. Explain the correct answer clearly and briefly (max 120 words) in simple Hinglish, and mention which NCERT concept it relates to.';
+  const prompt=`Question: ${q.text}\nOptions: ${q.options.map((o,j)=>String.fromCharCode(65+j)+'. '+o).join(', ')}\nCorrect answer: ${String.fromCharCode(65+q.correct)}. ${q.options[q.correct]}`;
+  const {ok,text:explanation,reason}=await askAI(prompt,sys);
+  btn.disabled=false;
+  if(!ok){
+    if(reason==='no-key'){
+      btn.style.display='none';
+      document.querySelector(`.ai-explain-${i}`).innerHTML=`<div class="ai-box">AI key set nahi hai abhi. <button class="btn ghost small" onclick="openAiSettings()">⚙️ AI Settings kholo</button></div>`;
+    }else{
+      btn.textContent='🤖 Explain this Question';
+      document.querySelector(`.ai-explain-${i}`).innerHTML=`<div class="ai-box" style="color:#c14a35;">AI call fail ho gaya: ${escapeHtml(reason)}</div>`;
+    }
+    return;
+  }
+  btn.style.display='none';
+  document.querySelector(`.ai-explain-${i}`).innerHTML=`<div class="ai-box">${escapeHtml(explanation||'AI se explanation nahi mil paya, dobara try karo.')}</div>`;
 }
 function backToTests(){document.getElementById('testBuilder').style.display='block';document.getElementById('testRunner').style.display='none';document.getElementById('testRunner').innerHTML='';renderTestList();}
+
+/* ================= TEST HISTORY + LEADERBOARD ================= */
+async function renderTestHistory(){
+  const results=await sGet('tests:results',[]);
+  const wrap=document.getElementById('testHistoryList');
+  if(!wrap)return;
+  if(!results.length){wrap.innerHTML='<div class="empty-state">Abhi koi test attempt nahi hua.</div>';return;}
+  wrap.innerHTML=results.slice(0,25).map(r=>`
+    <div class="file-item">
+      <div class="file-info"><b>${escapeHtml(r.testName)}</b><span><span class="tag">${r.score}/${r.total}</span> <span class="tag">${r.accuracy}% accuracy</span> · ${escapeHtml(r.takenBy||'')} · ${new Date(r.ts).toLocaleString()}</span></div>
+      <div class="file-actions"><button class="btn ghost small" onclick='renderResultAndSolutions(${JSON.stringify(r).replace(/'/g,"&#39;")})'>📄 View Solutions</button></div>
+    </div>`).join('');
+}
+async function renderLeaderboard(){
+  const results=await sGet('tests:results',[]);
+  const wrap=document.getElementById('leaderboardList');
+  if(!wrap)return;
+  if(!results.length){wrap.innerHTML='<div class="empty-state">Leaderboard ke liye pehle koi test do.</div>';return;}
+  const byPerson={};
+  results.forEach(r=>{
+    const key=r.takenBy||'Unknown';
+    byPerson[key]=byPerson[key]||{tests:0,totalScore:0,totalQ:0,bestAcc:0};
+    byPerson[key].tests++;
+    byPerson[key].totalScore+=r.score;
+    byPerson[key].totalQ+=r.total;
+    byPerson[key].bestAcc=Math.max(byPerson[key].bestAcc,r.accuracy);
+  });
+  const rows=Object.entries(byPerson).map(([name,v])=>({name,avgAcc:Math.round(v.totalScore/(v.totalQ||1)*100),tests:v.tests,bestAcc:v.bestAcc})).sort((a,b)=>b.avgAcc-a.avgAcc);
+  wrap.innerHTML=rows.map((r,i)=>`
+    <div class="leader-row">
+      <span>${i===0?'🥇':i===1?'🥈':'🥉'} <b>${escapeHtml(r.name)}</b></span>
+      <span style="color:var(--text-soft);font-size:12.5px;">${r.tests} tests · Avg ${r.avgAcc}% · Best ${r.bestAcc}%</span>
+    </div>`).join('');
+}
+
+/* ================= AI TOOLS: DOUBT SOLVER + SUMMARIZE ================= */
+async function askDoubt(){
+  const q=document.getElementById('doubtInput').value.trim();
+  if(!q){alert('Pehle apna doubt likho.');return;}
+  const box=document.getElementById('doubtAnswer');
+  box.innerHTML='<div class="ai-box">🤖 Soch rahi hai...</div>';
+  const sys="You are a warm, encouraging NEET tutor (Biology/Physics/Chemistry). Answer the student's doubt clearly in simple Hinglish, step by step if needed. Keep it focused and under 200 words.";
+  const {ok,text:ans,reason}=await askAI(q,sys);
+  if(!ok){
+    box.innerHTML=reason==='no-key'
+      ? `<div class="ai-box">AI key set nahi hai abhi. <button class="btn ghost small" onclick="openAiSettings()">⚙️ AI Settings kholo</button></div>`
+      : `<div class="ai-box" style="color:#c14a35;">AI call fail ho gaya: ${escapeHtml(reason)}</div>`;
+    return;
+  }
+  box.innerHTML=`<div class="ai-box">${escapeHtml(ans||'Answer nahi mil paya, dobara try karo.')}</div>`;
+}
+async function summarizeChapter(){
+  const text=document.getElementById('chapterTextInput').value.trim();
+  if(!text){alert('Chapter ka text paste karo pehle.');return;}
+  const box=document.getElementById('chapterSummary');
+  box.innerHTML='<div class="ai-box">🤖 Summarize kar rahi hai...</div>';
+  const sys='You are a NEET tutor. Summarize the given chapter text into clear, concise bullet points (max 10 bullets) in simple Hinglish, highlighting the most exam-important concepts.';
+  const {ok,text:ans,reason}=await askAI(text,sys);
+  if(!ok){
+    box.innerHTML=reason==='no-key'
+      ? `<div class="ai-box">AI key set nahi hai abhi. <button class="btn ghost small" onclick="openAiSettings()">⚙️ AI Settings kholo</button></div>`
+      : `<div class="ai-box" style="color:#c14a35;">AI call fail ho gaya: ${escapeHtml(reason)}</div>`;
+    return;
+  }
+  box.innerHTML=`<div class="ai-box">${escapeHtml(ans||'Summary nahi ban payi, dobara try karo.')}</div>`;
+}
 
 /* ================= POMODORO TIMER ================= */
 let pomoSeconds=25*60,pomoRunning=false,pomoInt=null,pomoIsBreak=false;
@@ -1231,9 +1958,250 @@ function startCall(){
 }
 function endCall(){if(jitsiApi){jitsiApi.dispose();jitsiApi=null;}document.getElementById('jitsi-container').innerHTML='';}
 
+/* ================= HABIT TRACKER ================= */
+async function todaysHabits(){return sGet('habits:'+todayStr(),{water:0,sleep:null,exercise:null});}
+async function renderHabits(){
+  const h=await todaysHabits();
+  document.getElementById('waterCount').textContent=h.water||0;
+  document.getElementById('sleepInput').value=h.sleep||'';
+  document.getElementById('exYesBtn').classList.toggle('selected',h.exercise===true);
+  document.getElementById('exNoBtn').classList.toggle('selected',h.exercise===false);
+}
+async function adjustWater(delta){
+  const h=await todaysHabits();
+  h.water=Math.max(0,(h.water||0)+delta);
+  await sSet('habits:'+todayStr(),h);
+  await logActivity();
+  renderHabits();
+  if(h.water>0 && h.water%8===0)burstConfetti(window.innerWidth/2,200);
+}
+async function saveSleep(val){
+  const h=await todaysHabits();
+  h.sleep=parseFloat(val)||null;
+  await sSet('habits:'+todayStr(),h);
+  await logActivity();
+}
+async function setExercise(val){
+  const h=await todaysHabits();
+  h.exercise=val;
+  await sSet('habits:'+todayStr(),h);
+  await logActivity();
+  renderHabits();
+  if(val)burstConfetti(window.innerWidth/2,200);
+}
+
+/* ================= MOOD TRACKER ================= */
+const MOODS=[
+  {key:'happy',em:'😊',label:'Happy'},{key:'calm',em:'😌',label:'Calm'},{key:'motivated',em:'🤩',label:'Motivated'},
+  {key:'excited',em:'😍',label:'Excited'},{key:'tired',em:'😴',label:'Tired'},{key:'confused',em:'😵',label:'Confused'},
+  {key:'stressed',em:'😫',label:'Stressed'},{key:'sad',em:'😔',label:'Sad'}
+];
+const SUPPORT_MESSAGES={
+  sad:["Ro lo agar man kare, phir wapas utho — main tumhare saath hu.","Aaj ka din bhaari hai, lekin ye bhi guzar jayega. Proud of you for showing up.","Ek chhota sa break lo, phir se shuru karenge saath mein."],
+  stressed:["Saans lo — 4 second andar, 4 second roko, 4 second bahar. Phir se try karo.","Tumne already itna kuch handle kiya hai. Ye bhi ho jayega.","Ek ek chapter, ek ek din. Sab kuch ek saath karne ki zaroorat nahi."],
+  tired:["Aaram bhi zaroori hai, warrior. 10 min rest lo phir wapas aana.","Body ko sun lo — thoda paani piyo, stretch karo.","Kal ek fresh din hai. Aaj jitna hua utna kaafi hai."],
+  confused:["Confusion normal hai jab tum naya seekh rahe ho. Ek chhota step lo.","AI Doubt Solver try karo, ya ek break lekar wapas dekho."]
+};
+async function todaysMood(){return sGet('mood:'+todayStr(),null);}
+async function renderMoodTracker(){
+  const current=await todaysMood();
+  document.getElementById('moodRow').innerHTML=MOODS.map(m=>`
+    <div class="mood-btn ${current===m.key?'selected':''}" onclick="setMood('${m.key}')"><span class="em">${m.em}</span><span>${m.label}</span></div>
+  `).join('');
+  const box=document.getElementById('moodSupportBox');
+  if(current && SUPPORT_MESSAGES[current]){
+    const msgs=SUPPORT_MESSAGES[current];
+    const msg=msgs[Math.floor(Math.random()*msgs.length)];
+    box.innerHTML=`<div class="ai-box">💗 ${escapeHtml(msg)}</div>`;
+  }else{box.innerHTML='';}
+}
+async function setMood(key){
+  await sSet('mood:'+todayStr(),key);
+  await logActivity();
+  renderMoodTracker();
+  if(['happy','excited','motivated','calm'].includes(key))burstConfetti(window.innerWidth/2,150);
+}
+
+/* ================= DAILY JOURNAL ================= */
+async function addJournalEntry(){
+  const studied=document.getElementById('journalStudied').value.trim();
+  const achieve=document.getElementById('journalAchieve').value.trim();
+  const challenge=document.getElementById('journalChallenge').value.trim();
+  const goal=document.getElementById('journalGoal').value.trim();
+  if(!studied && !achieve && !challenge && !goal){alert('Kam se kam ek field bharo.');return;}
+  const list=await sGet('journal:all',[]);
+  list.unshift({id:uid(),date:todayStr(),studied,achieve,challenge,goal,ts:Date.now()});
+  await sSet('journal:all',list);
+  ['journalStudied','journalAchieve','journalChallenge','journalGoal'].forEach(id=>document.getElementById(id).value='');
+  await logActivity();
+  renderJournal();
+  burstConfetti(window.innerWidth/2,300);
+}
+async function renderJournal(){
+  const list=await sGet('journal:all',[]);
+  const wrap=document.getElementById('journalList');
+  if(!list.length){wrap.innerHTML='<div class="empty-state">Abhi tak koi journal entry nahi likhi gayi.</div>';return;}
+  wrap.innerHTML=list.slice(0,30).map(j=>`
+    <div class="journal-entry">
+      <div class="jdate">${new Date(j.date).toLocaleDateString([], {weekday:'long',day:'2-digit',month:'short',year:'numeric'})}</div>
+      ${j.studied?`<div class="jrow"><b>Padha:</b> ${escapeHtml(j.studied)}</div>`:''}
+      ${j.achieve?`<div class="jrow"><b>Achievement:</b> ${escapeHtml(j.achieve)}</div>`:''}
+      ${j.challenge?`<div class="jrow"><b>Mushkil:</b> ${escapeHtml(j.challenge)}</div>`:''}
+      ${j.goal?`<div class="jrow"><b>Kal ka goal:</b> ${escapeHtml(j.goal)}</div>`:''}
+      <div class="row" style="margin-top:8px;"><button class="btn danger small" onclick="deleteJournal('${j.id}')">🗑</button></div>
+    </div>`).join('');
+}
+async function deleteJournal(id){
+  const list=await sGet('journal:all',[]);
+  await sSet('journal:all',list.filter(j=>j.id!==id));
+  renderJournal();
+}
+
+/* ================= MEMORY GALLERY ================= */
+async function addGalleryPhoto(){
+  const fileInput=document.getElementById('galleryFile');
+  const caption=document.getElementById('galleryCaption').value.trim();
+  const msg=document.getElementById('galleryMsg');
+  const f=fileInput.files[0];
+  if(!f){msg.textContent='Pehle ek photo choose karo.';msg.style.color='#c14a35';return;}
+  if(f.size>3.2*1024*1024){msg.textContent='⚠️ Photo 3MB se badi hai, thodi compress karo.';msg.style.color='#c14a35';return;}
+  msg.textContent='Uploading...';msg.style.color='var(--text-soft)';
+  const b64=await fileToBase64(f);
+  const list=await sGet('gallery:all',[]);
+  list.unshift({id:uid(),data:b64,caption,date:todayStr(),ts:Date.now()});
+  const ok=await sSet('gallery:all',list);
+  if(!ok){msg.textContent='❌ Save fail ho gaya.';msg.style.color='#c14a35';return;}
+  fileInput.value='';document.getElementById('galleryCaption').value='';
+  msg.textContent='✅ Gallery mein add ho gaya!';msg.style.color='var(--good)';
+  await logActivity();
+  renderGallery();
+}
+async function renderGallery(){
+  const list=await sGet('gallery:all',[]);
+  const grid=document.getElementById('galleryGrid');
+  if(!list.length){grid.innerHTML='<div class="empty-state">Gallery abhi khali hai — pehli memory add karo 💕</div>';}
+  else{
+    grid.innerHTML=list.map(g=>`
+      <div class="gallery-item">
+        <img src="${g.data}" onclick="viewGalleryPhoto('${g.id}')">
+        <div class="gcap">${escapeHtml(g.caption||'')} <br><span style="opacity:.7;">${new Date(g.date).toLocaleDateString()}</span></div>
+        <div class="row admin-only" style="padding:0 10px 10px;"><button class="btn danger small" onclick="deleteGalleryPhoto('${g.id}')">🗑</button></div>
+      </div>`).join('');
+  }
+  const today=new Date();
+  const onThisDay=list.filter(g=>{
+    const d=new Date(g.date);
+    return d.getDate()===today.getDate() && d.getMonth()===today.getMonth() && d.getFullYear()<today.getFullYear();
+  });
+  const otdBox=document.getElementById('onThisDayBox');
+  otdBox.innerHTML=onThisDay.length?`<div class="ai-box">📅 <b>On This Day:</b> ${onThisDay.length} memory(s) is din ki purani hain — scroll karke dekho neeche 💗</div>`:'';
+}
+function viewGalleryPhoto(id){
+  sGet('gallery:all',[]).then(list=>{
+    const g=list.find(x=>x.id===id); if(!g)return;
+    document.getElementById('modalBody').innerHTML=`<img src="${g.data}"><p style="margin-top:10px;">${escapeHtml(g.caption||'')}</p><p style="color:var(--text-soft);font-size:12px;">${new Date(g.date).toLocaleDateString()}</p>`;
+    document.getElementById('modalBg').classList.add('show');
+  });
+}
+async function deleteGalleryPhoto(id){
+  if(!confirm('Ye photo delete karni hai?'))return;
+  const list=await sGet('gallery:all',[]);
+  await sSet('gallery:all',list.filter(g=>g.id!==id));
+  renderGallery();
+}
+
+/* ================= MESSAGE OF THE DAY / SURPRISE NOTES ================= */
+async function addSurpriseNote(){
+  const text=document.getElementById('noteText').value.trim();
+  const type=document.getElementById('noteType').value;
+  const date=document.getElementById('noteDate').value || todayStr();
+  if(!text){alert('Message likho pehle.');return;}
+  const list=await sGet('notes:love',[]);
+  list.unshift({id:uid(),text,type,date,ts:Date.now()});
+  await sSet('notes:love',list);
+  document.getElementById('noteText').value='';document.getElementById('noteDate').value='';
+  renderLoveNotes();
+}
+const NOTE_TAGS={morning:'🌅 Good Morning',night:'🌙 Good Night',secret:'🔒 Secret Letter',general:'💌 Note'};
+async function renderLoveNotes(){
+  const list=await sGet('notes:love',[]);
+  const wrap=document.getElementById('loveWallGrid');
+  if(!list.length){wrap.innerHTML='<div class="empty-state">Love Wall abhi khali hai — pehla note pin karo 💕</div>';return;}
+  const today=todayStr();
+  wrap.innerHTML=list.map(n=>{
+    const unlocked=n.date<=today;
+    const type=n.type||'general';
+    if(!unlocked)return `<div class="wall-note general" style="text-align:center;">🔒 Ek surprise <b>${new Date(n.date).toLocaleDateString()}</b> ko unlock hoga 🎁</div>`;
+    return `<div class="wall-note ${type}">
+      <span class="wtag">${NOTE_TAGS[type]||'💌 Note'} · ${new Date(n.date).toLocaleDateString()}</span>
+      ${escapeHtml(n.text)}
+      <div class="row admin-only" style="margin-top:10px;"><button class="btn ${type==='secret'?'ghost':'danger'} small" onclick="deleteLoveNote('${n.id}')" style="${type==='secret'?'color:#fff;border-color:#fff;':''}">🗑</button></div>
+    </div>`;
+  }).join('');
+}
+async function deleteLoveNote(id){
+  const list=await sGet('notes:love',[]);
+  await sSet('notes:love',list.filter(n=>n.id!==id));
+  renderLoveNotes();
+}
+
+/* ================= VIRTUAL HUG ================= */
+async function sendHug(){
+  const role=document.body.classList.contains('student-mode')?'Sakshi':'Admin';
+  const hugs=await sGet('hugs:all',[]);
+  hugs.unshift({id:uid(),from:role,ts:Date.now()});
+  await sSet('hugs:all',hugs.slice(0,200));
+  renderHugs();
+  burstConfetti(window.innerWidth/2,250);
+}
+async function renderHugs(){
+  const hugs=await sGet('hugs:all',[]);
+  document.getElementById('hugCountText').textContent=hugs.length+' hugs bheje gaye ab tak';
+  const myRole=document.body.classList.contains('student-mode')?'Sakshi':'Admin';
+  const lastFromOther=hugs.find(h=>h.from!==myRole);
+  const box=document.getElementById('hugReceivedBox');
+  if(lastFromOther && (Date.now()-lastFromOther.ts)<60000){
+    box.innerHTML=`<div class="ai-box">🤗 ${lastFromOther.from} ne abhi tumhe hug bheja hai!</div>`;
+  }else{box.innerHTML='';}
+}
+
+async function renderUsPage(){
+  renderMoodTracker();
+  renderHabits();
+  renderJournal();
+  renderGallery();
+  renderLoveNotes();
+  renderHugs();
+}
+
+/* ================= REALTIME SYNC (no refresh needed) ================= */
+function setupRealtimeSync(){
+  if(!supabaseClient)return;
+  supabaseClient.channel('app_data_changes')
+    .on('postgres_changes',{event:'*',schema:'public',table:'app_data'},(payload)=>{
+      const key=(payload.new && payload.new.key) || (payload.old && payload.old.key) || '';
+      refreshCurrentView(key);
+    }).subscribe();
+}
+function refreshCurrentView(key){
+  const activeId=document.querySelector('.view.active') ? document.querySelector('.view.active').id : 'home';
+  if(activeId==='home')updateHomeStats();
+  else if(activeId==='timetable')renderSlots();
+  else if(activeId==='syllabus')renderChapters();
+  else if(activeId==='dpp')renderDppList();
+  else if(activeId==='notes')renderNotesList();
+  else if(activeId==='upload')renderFileList();
+  else if(activeId==='test')renderTestList();
+  else if(activeId==='progress')renderProgressPage();
+  else if(activeId==='us')renderUsPage();
+  updateHomeStats();
+}
+
+
 /* ================= INIT ================= */
 initTheme();
 initAuth();
+setupRealtimeSync();
 if(!supabaseClient){
   const warn=document.createElement('div');
   warn.style.cssText='position:fixed;bottom:0;left:0;right:0;background:#c14a35;color:#fff;text-align:center;padding:8px;font-size:12px;z-index:200;';
@@ -1242,6 +2210,7 @@ if(!supabaseClient){
 }
 renderCatTabs();renderFileList();
 renderBuilder();renderTestList();
+renderTestHistory();renderLeaderboard();
 renderSlots();
 renderSubjTabs();renderChapters();
 renderDppSubjTabs();renderDppList();
