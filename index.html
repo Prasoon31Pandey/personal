@@ -16,9 +16,9 @@
   --line:#f3d9e0; --good:#4a9d6f; --shadow:0 10px 30px rgba(165,44,83,.10);
 }
 body[data-theme="dark"]{
-  --bg:#1b1014; --bg-card:#26161c; --blush:#3a1f2a; --blush-deep:#4b2534;
-  --wine:#e8628a; --wine-dark:#ffb8cd; --gold:#e8bd77; --text:#f6e7ec; --text-soft:#cf9fae;
-  --line:#3e2530; --good:#6fcf97; --shadow:0 10px 30px rgba(0,0,0,.45);
+  --bg:#180f16; --bg-card:#241521; --blush:#3a2233; --blush-deep:#4e2b42;
+  --wine:#ec6f9a; --wine-dark:#ffc2da; --gold:#f0c583; --text:#f8ecf2; --text-soft:#d9a8c0;
+  --line:#432a3d; --good:#6fcf97; --shadow:0 10px 34px rgba(0,0,0,.5);
 }
 *{box-sizing:border-box;}
 body{margin:0;background:var(--bg);background-image:linear-gradient(120deg,var(--bg),var(--blush) 40%,var(--bg) 70%,var(--blush-deep) 100%);background-size:300% 300%;animation:dynamicBg 22s ease infinite;color:var(--text);font-family:'Poppins',sans-serif;transition:background-color .4s,color .4s;}
@@ -437,8 +437,16 @@ footer{text-align:center;padding:28px 0;color:var(--text-soft);font-size:12px;}
   <div class="wrap">
     <div class="section-title"><h2>Timetable</h2><span class="pill-note">Synced for both</span></div>
 
-    <h3 style="color:var(--wine-dark);">✅ Aaj Ke Must-Do Tasks</h3>
-    <p style="color:var(--text-soft);font-size:12.5px;">Bas ye kar ke sona hai aaj — chhoti, zaroori list.</p>
+    <div class="row" style="margin-bottom:20px;">
+      <button class="icon-btn" onclick="shiftTimetableDate(-1)">◀</button>
+      <input type="date" id="timetableDateInput" onchange="setTimetableDate(this.value)">
+      <button class="icon-btn" onclick="shiftTimetableDate(1)">▶</button>
+      <button class="btn ghost small" onclick="setTimetableDate(todayStr())">Today</button>
+      <span id="timetableDateLabel" style="font-weight:600;color:var(--wine-dark);"></span>
+    </div>
+
+    <h3 style="color:var(--wine-dark);">✅ Must-Do Tasks</h3>
+    <p style="color:var(--text-soft);font-size:12.5px;">Is date ke liye chhoti, zaroori list — "bas ye kar ke sona hai".</p>
     <div class="row" style="margin-bottom:14px;">
       <input type="text" id="mustDoInput" placeholder="e.g. Physics ka 1 chapter revise karna hai" style="min-width:260px;">
       <button class="btn" onclick="addMustDo()">+ Add Task</button>
@@ -447,15 +455,7 @@ footer{text-align:center;padding:28px 0;color:var(--text-soft);font-size:12px;}
 
     <div class="pulse-divider"><svg viewBox="0 0 800 40" preserveAspectRatio="none"><path d="M0 20 L200 20 L225 3 L245 37 L268 20 L800 20"/></svg></div>
 
-    <div class="section-title"><h2 style="font-size:20px;">🗓️ Date-wise Timetable</h2></div>
-    <div class="row" style="margin-bottom:14px;">
-      <button class="icon-btn" onclick="shiftTimetableDate(-1)">◀</button>
-      <input type="date" id="timetableDateInput" onchange="setTimetableDate(this.value)">
-      <button class="icon-btn" onclick="shiftTimetableDate(1)">▶</button>
-      <button class="btn ghost small" onclick="setTimetableDate(todayStr())">Today</button>
-      <span id="timetableDateLabel" style="font-weight:600;color:var(--wine-dark);"></span>
-    </div>
-
+    <div class="section-title"><h2 style="font-size:20px;">🗓️ Time Slots</h2></div>
     <div class="add-form admin-only">
       <h3>Add a Time Slot</h3>
       <div class="row">
@@ -1056,10 +1056,18 @@ const DAILY_PALETTES=[
   {wine:'#7c4a9e',wineDark:'#4f2d66',gold:'#c9a0dc',blush:'#f0e5fa',blushDeep:'#ddc3f0'},
   {wine:'#a5395c',wineDark:'#6e1f3c',gold:'#d4a06a',blush:'#ffe6ee',blushDeep:'#f5c6d6'}
 ];
+const DAILY_PALETTES_DARK=[
+  {wine:'#ec6f9a',wineDark:'#ffc2da',gold:'#f0c583',blush:'#3a2233',blushDeep:'#4e2b42'},
+  {wine:'#d888c9',wineDark:'#f2c3ea',gold:'#e8b8ea',blush:'#2f2138',blushDeep:'#432d4d'},
+  {wine:'#f08a76',wineDark:'#ffcfc0',gold:'#f4c98a',blush:'#3a2420',blushDeep:'#4d312a'},
+  {wine:'#b98ae0',wineDark:'#dcc4f5',gold:'#d9b8f0',blush:'#291f3a',blushDeep:'#3c2c53'},
+  {wine:'#e688a8',wineDark:'#f7c6d8',gold:'#e0b384',blush:'#331f2a',blushDeep:'#472a3a'}
+];
 function applyDailyPalette(){
-  if((document.body.getAttribute('data-theme')||'light')==='dark')return;
+  const isDark=(document.body.getAttribute('data-theme')||'light')==='dark';
+  const set=isDark?DAILY_PALETTES_DARK:DAILY_PALETTES;
   const dayOfYear=Math.floor((Date.now()-new Date(new Date().getFullYear(),0,0))/86400000);
-  const p=DAILY_PALETTES[dayOfYear%DAILY_PALETTES.length];
+  const p=set[dayOfYear%set.length];
   const root=document.documentElement.style;
   root.setProperty('--wine',p.wine);
   root.setProperty('--wine-dark',p.wineDark);
@@ -1089,17 +1097,20 @@ function computeStreak(log){
 async function addMustDo(){
   const text=document.getElementById('mustDoInput').value.trim();
   if(!text){alert('Task likho pehle.');return;}
-  const list=await sGet('mustdo:'+todayStr(),[]);
+  const key='mustdo:'+selectedTimetableDate;
+  const list=await sGet(key,[]);
   list.push({id:uid(),text,done:false});
-  await sSet('mustdo:'+todayStr(),list);
+  await sSet(key,list);
   document.getElementById('mustDoInput').value='';
   await logActivity();
   renderMustDo();
 }
 async function renderMustDo(){
-  const list=await sGet('mustdo:'+todayStr(),[]);
+  const key='mustdo:'+selectedTimetableDate;
+  const list=await sGet(key,[]);
   const wrap=document.getElementById('mustDoList');
-  if(!list.length){wrap.innerHTML='<div class="empty-state">Aaj ke liye koi must-do task add nahi hua.</div>';return;}
+  const isToday=selectedTimetableDate===todayStr();
+  if(!list.length){wrap.innerHTML=`<div class="empty-state">${isToday?'Aaj':'Is date'} ke liye koi must-do task add nahi hua.</div>`;return;}
   wrap.innerHTML=list.map(t=>`
     <div class="timeslot-row ${t.done?'done':''}">
       <button class="check-round ${t.done?'on':''}" onclick="toggleMustDo('${t.id}',event)">${t.done?'✓':''}</button>
@@ -1108,16 +1119,18 @@ async function renderMustDo(){
     </div>`).join('');
 }
 async function toggleMustDo(id,ev){
-  const list=await sGet('mustdo:'+todayStr(),[]);
+  const key='mustdo:'+selectedTimetableDate;
+  const list=await sGet(key,[]);
   const item=list.find(x=>x.id===id); if(!item)return;
   item.done=!item.done;
-  await sSet('mustdo:'+todayStr(),list);
+  await sSet(key,list);
   if(item.done && ev)burstConfetti(ev.clientX,ev.clientY);
   renderMustDo();
 }
 async function deleteMustDo(id){
-  const list=await sGet('mustdo:'+todayStr(),[]);
-  await sSet('mustdo:'+todayStr(),list.filter(x=>x.id!==id));
+  const key='mustdo:'+selectedTimetableDate;
+  const list=await sGet(key,[]);
+  await sSet(key,list.filter(x=>x.id!==id));
   renderMustDo();
 }
 
@@ -1138,6 +1151,7 @@ function setTimetableDate(date){
   document.getElementById('timetableDateInput').value=date;
   updateTimetableDateLabel();
   renderSlots();
+  renderMustDo();
 }
 function shiftTimetableDate(delta){
   const d=new Date(selectedTimetableDate);
@@ -1776,10 +1790,18 @@ async function uploadAnswer(id){
 }
 
 /* ================= HOME STATS + LOVE METER ================= */
+async function clearCurrentlyStudying(){
+  await sSet('currentlyStudying',null);
+  updateHomeStats();
+}
 async function updateHomeStats(){
   renderStoryChapter();
   const current=await sGet('currentlyStudying',null);
-  document.getElementById('currentStudyText').textContent=current?`${current.subject} — ${current.name}`:'Kuch bhi pin nahi hua abhi — Syllabus mein 📌 dabao.';
+  const validCurrent=current && SUBJECTS.includes(current.subject) ? current : null;
+  if(current && !validCurrent){await sSet('currentlyStudying',null);}
+  document.getElementById('currentStudyText').innerHTML=validCurrent
+    ? `${escapeHtml(validCurrent.subject)} — ${escapeHtml(validCurrent.name)} <button class="btn ghost small admin-only" style="margin-left:10px;" onclick="clearCurrentlyStudying()">✕ Clear</button>`
+    : 'Kuch bhi pin nahi hua abhi — Syllabus mein 📌 dabao.';
   let totalChapters=0,doneChapters=0;
   for(const s of SUBJECTS){const list=await sGet('syllabus:'+s,[]);totalChapters+=list.length;doneChapters+=list.filter(c=>c.complete).length;}
   document.getElementById('homeSyllabusText').textContent=totalChapters?doneChapters+' of '+totalChapters+' chapters complete':'Nothing added yet';
