@@ -312,6 +312,7 @@ footer{text-align:center;padding:28px 0;color:var(--text-soft);font-size:12px;}
       <button class="tab-btn" data-tab="syllabus">Syllabus</button>
       <button class="tab-btn" data-tab="dpp">DPP</button>
       <button class="tab-btn" data-tab="notes">Notes</button>
+      <button class="tab-btn" data-tab="ncert">📗 NCERT</button>
       <button class="tab-btn" data-tab="progress">Progress</button>
       <button class="tab-btn admin-only" data-tab="upload">Upload Center</button>
       <button class="tab-btn" data-tab="test">Weekly Test</button>
@@ -434,12 +435,32 @@ footer{text-align:center;padding:28px 0;color:var(--text-soft);font-size:12px;}
 <!-- ============ TIMETABLE ============ -->
 <section class="view" id="timetable">
   <div class="wrap">
-    <div class="section-title"><h2>Today's Timetable</h2><span class="pill-note">Synced for both</span></div>
+    <div class="section-title"><h2>Timetable</h2><span class="pill-note">Synced for both</span></div>
+
+    <h3 style="color:var(--wine-dark);">✅ Aaj Ke Must-Do Tasks</h3>
+    <p style="color:var(--text-soft);font-size:12.5px;">Bas ye kar ke sona hai aaj — chhoti, zaroori list.</p>
+    <div class="row" style="margin-bottom:14px;">
+      <input type="text" id="mustDoInput" placeholder="e.g. Physics ka 1 chapter revise karna hai" style="min-width:260px;">
+      <button class="btn" onclick="addMustDo()">+ Add Task</button>
+    </div>
+    <div id="mustDoList" style="margin-bottom:26px;"></div>
+
+    <div class="pulse-divider"><svg viewBox="0 0 800 40" preserveAspectRatio="none"><path d="M0 20 L200 20 L225 3 L245 37 L268 20 L800 20"/></svg></div>
+
+    <div class="section-title"><h2 style="font-size:20px;">🗓️ Date-wise Timetable</h2></div>
+    <div class="row" style="margin-bottom:14px;">
+      <button class="icon-btn" onclick="shiftTimetableDate(-1)">◀</button>
+      <input type="date" id="timetableDateInput" onchange="setTimetableDate(this.value)">
+      <button class="icon-btn" onclick="shiftTimetableDate(1)">▶</button>
+      <button class="btn ghost small" onclick="setTimetableDate(todayStr())">Today</button>
+      <span id="timetableDateLabel" style="font-weight:600;color:var(--wine-dark);"></span>
+    </div>
+
     <div class="add-form admin-only">
       <h3>Add a Time Slot</h3>
       <div class="row">
         <input type="text" id="slotTime" placeholder="Time e.g. 6:00 AM - 7:00 AM" style="min-width:200px;">
-        <select id="slotSubject"><option>Physics</option><option>Chemistry</option><option>Botany</option><option>Zoology</option><option>Revision</option><option>Break</option><option>General</option></select>
+        <select id="slotSubject"><option>Physics</option><option>Organic Chemistry</option><option>Inorganic Chemistry</option><option>Physical Chemistry</option><option>Botany</option><option>Zoology</option><option>Revision</option><option>Break</option><option>General</option></select>
         <input type="text" id="slotTask" placeholder="Task (e.g. NCERT Ch.12 reading)" style="min-width:220px;">
         <button class="btn" onclick="addSlot()">+ Add Slot</button>
       </div>
@@ -451,7 +472,7 @@ footer{text-align:center;padding:28px 0;color:var(--text-soft);font-size:12px;}
     <div class="add-form" style="margin-bottom:16px;">
       <div class="row" style="margin-bottom:8px;">
         <input type="date" id="logDate">
-        <select id="logSubject"><option>Physics</option><option>Chemistry</option><option>Botany</option><option>Zoology</option><option>Revision</option></select>
+        <select id="logSubject"><option>Physics</option><option>Organic Chemistry</option><option>Inorganic Chemistry</option><option>Physical Chemistry</option><option>Botany</option><option>Zoology</option><option>Revision</option></select>
       </div>
       <div class="row" style="margin-bottom:8px;">
         <input type="text" id="logTopic" placeholder="Topic / Chapter (e.g. Human Reproduction)" style="min-width:240px;">
@@ -493,7 +514,7 @@ footer{text-align:center;padding:28px 0;color:var(--text-soft);font-size:12px;}
       <h3>Upload New DPP</h3>
       <div class="row" style="margin-bottom:10px;">
         <input type="text" id="dppTitle" placeholder="Title e.g. Biology DPP 12" style="min-width:220px;">
-        <select id="dppSubject"><option>Physics</option><option>Chemistry</option><option>Botany</option><option>Zoology</option></select>
+        <select id="dppSubject"><option>Physics</option><option>Organic Chemistry</option><option>Inorganic Chemistry</option><option>Physical Chemistry</option><option>Botany</option><option>Zoology</option></select>
       </div>
       <div class="row" style="margin-bottom:10px;">
         <input type="file" id="dppFile"><span style="color:var(--text-soft);font-size:12px;">— or —</span>
@@ -511,6 +532,45 @@ footer{text-align:center;padding:28px 0;color:var(--text-soft);font-size:12px;}
     <div class="section-title"><h2>Notes Library</h2><span class="pill-note">Subject-wise</span></div>
     <div class="subject-tabs" id="notesSubjTabs"></div>
     <div id="notesList" style="margin-top:16px;"></div>
+  </div>
+</section>
+
+<!-- ============ NCERT BOOKS ============ -->
+<section class="view" id="ncert">
+  <div class="wrap">
+    <div class="section-title"><h2>📗 NCERT Books</h2><span class="pill-note">Subject-wise book PDFs</span></div>
+    <div class="subject-tabs" id="ncertSubjTabs"></div>
+
+    <div class="uploader admin-only" style="margin-bottom:18px;">
+      <h3>Upload Book PDF</h3>
+      <div class="row" style="margin-bottom:10px;">
+        <input type="text" id="ncertTitle" placeholder="Title e.g. NCERT Physics Part 1" style="min-width:220px;">
+      </div>
+      <div class="row" style="margin-bottom:10px;">
+        <input type="file" id="ncertFile" accept=".pdf,application/pdf">
+        <span style="color:var(--text-soft);font-size:12px;">— or —</span>
+        <input type="url" id="ncertLink" placeholder="Paste link instead" style="min-width:220px;">
+      </div>
+      <div class="row"><button class="btn" onclick="addNcertBook()">⬆ Upload Book</button><span id="ncertMsg" style="font-size:12px;color:var(--text-soft);"></span></div>
+    </div>
+    <div class="file-list" id="ncertBookList"></div>
+
+    <h3 style="color:var(--wine-dark);margin-top:30px;">📖 Reading Log</h3>
+    <p style="color:var(--text-soft);font-size:12.5px;">Aaj kaunsi book padhi aur kitni — yahan record karo.</p>
+    <div class="add-form" style="margin-bottom:16px;">
+      <div class="row" style="margin-bottom:8px;">
+        <input type="date" id="readDate">
+        <span style="color:var(--text-soft);font-size:12px;">(Subject upar se select hai)</span>
+      </div>
+      <div class="row" style="margin-bottom:8px;">
+        <select id="readBookSel"><option value="">-- Book choose karo (optional) --</option></select>
+      </div>
+      <div class="row" style="margin-bottom:8px;">
+        <input type="text" id="readPortion" placeholder="Kitna padha (e.g. Chapter 5, Page 40-55)" style="min-width:260px;">
+      </div>
+      <button class="btn" onclick="addReadingLog()">💾 Save</button>
+    </div>
+    <div id="readingLogList"></div>
   </div>
 </section>
 
@@ -556,7 +616,7 @@ footer{text-align:center;padding:28px 0;color:var(--text-soft);font-size:12px;}
       <h3 id="uploaderTitle">Add to Syllabus</h3>
       <div class="row" style="margin-bottom:10px;">
         <input type="text" id="itemTitle" placeholder="Title" style="min-width:220px;">
-        <select id="itemSubject"><option value="General">General</option><option value="Physics">Physics</option><option value="Chemistry">Chemistry</option><option value="Botany">Botany</option><option value="Zoology">Zoology</option></select>
+        <select id="itemSubject"><option value="General">General</option><option value="Physics">Physics</option><option value="Organic Chemistry">Organic Chemistry</option><option value="Inorganic Chemistry">Inorganic Chemistry</option><option value="Physical Chemistry">Physical Chemistry</option><option value="Botany">Botany</option><option value="Zoology">Zoology</option></select>
       </div>
       <div class="row" style="margin-bottom:10px;">
         <input type="file" id="itemFile"><span style="color:var(--text-soft);font-size:12px;">— or —</span>
@@ -579,7 +639,7 @@ footer{text-align:center;padding:28px 0;color:var(--text-soft);font-size:12px;}
         <p style="color:var(--text-soft);font-size:12.5px;margin-top:0;">Question-paper PDF upload karo — AI khud questions, options aur answers detect karke test bana dega. Answer key na mile to AI khud solve karke sahi answer bhi de dega.</p>
         <div class="row" style="margin-bottom:10px;">
           <input type="text" id="aiTestName" placeholder="Test name" style="min-width:220px;">
-          <select id="aiTestSubject"><option>Physics</option><option>Chemistry</option><option>Botany</option><option>Zoology</option><option>Mixed</option></select>
+          <select id="aiTestSubject"><option>Physics</option><option>Organic Chemistry</option><option>Inorganic Chemistry</option><option>Physical Chemistry</option><option>Botany</option><option>Zoology</option><option>Mixed</option></select>
           <input type="file" id="aiPdfFile" accept="application/pdf">
         </div>
         <textarea id="aiPastedText" placeholder="...ya seedha question paper ka text yahan paste karo (PDF ki jagah)" rows="3" style="width:100%;margin-bottom:10px;"></textarea>
@@ -592,7 +652,7 @@ footer{text-align:center;padding:28px 0;color:var(--text-soft);font-size:12px;}
         <div class="row" style="margin-bottom:10px;">
           <input type="text" id="testName" placeholder="Test name" style="min-width:260px;">
           <input type="number" id="testMinutes" placeholder="Duration (mins)" value="30" style="width:120px;">
-          <select id="testSubject"><option>Physics</option><option>Chemistry</option><option>Botany</option><option>Zoology</option><option>Mixed</option></select>
+          <select id="testSubject"><option>Physics</option><option>Organic Chemistry</option><option>Inorganic Chemistry</option><option>Physical Chemistry</option><option>Botany</option><option>Zoology</option><option>Mixed</option></select>
         </div>
         <div class="row" style="margin-bottom:10px;">
           <input type="url" id="testPaperLink" placeholder="Optional: link to original question-paper PDF" style="flex:1;min-width:220px;">
@@ -934,7 +994,8 @@ function switchTab(id){
   window.scrollTo({top:0,behavior:'smooth'});
   if(id==='progress')renderProgressPage();
   if(id==='us')renderUsPage();
-  if(id==='timetable')renderStudyLog();
+  if(id==='timetable'){if(!selectedTimetableDate)initTimetableDate();renderSlots();renderStudyLog();renderMustDo();}
+  if(id==='ncert'){renderNcertSubjTabs();renderNcertBooks();renderReadingLog();populateReadBookSel();}
 }
 document.querySelectorAll('.tab-btn').forEach(b=>b.addEventListener('click',()=>switchTab(b.dataset.tab)));
 
@@ -971,6 +1032,7 @@ function initTheme(){
   const saved=localStorage.getItem('drsakshi_theme')||'light';
   document.body.setAttribute('data-theme',saved);
   document.getElementById('themeBtn').textContent=saved==='dark'?'☀️':'🌙';
+  applyDailyPalette();
 }
 function toggleTheme(){
   const cur=document.body.getAttribute('data-theme')||'light';
@@ -978,6 +1040,25 @@ function toggleTheme(){
   document.body.setAttribute('data-theme',next);
   document.getElementById('themeBtn').textContent=next==='dark'?'☀️':'🌙';
   localStorage.setItem('drsakshi_theme',next);
+  applyDailyPalette();
+}
+const DAILY_PALETTES=[
+  {wine:'#a52c53',wineDark:'#6d1c38',gold:'#cf9b45',blush:'#ffe3ea',blushDeep:'#ffc9d7'},
+  {wine:'#8e3b6f',wineDark:'#5c2249',gold:'#d9a85c',blush:'#f6e2f2',blushDeep:'#e9c3e0'},
+  {wine:'#c2453f',wineDark:'#7d2823',gold:'#e8a45c',blush:'#ffe7e0',blushDeep:'#ffc7ba'},
+  {wine:'#7c4a9e',wineDark:'#4f2d66',gold:'#c9a0dc',blush:'#f0e5fa',blushDeep:'#ddc3f0'},
+  {wine:'#a5395c',wineDark:'#6e1f3c',gold:'#d4a06a',blush:'#ffe6ee',blushDeep:'#f5c6d6'}
+];
+function applyDailyPalette(){
+  if((document.body.getAttribute('data-theme')||'light')==='dark')return;
+  const dayOfYear=Math.floor((Date.now()-new Date(new Date().getFullYear(),0,0))/86400000);
+  const p=DAILY_PALETTES[dayOfYear%DAILY_PALETTES.length];
+  const root=document.documentElement.style;
+  root.setProperty('--wine',p.wine);
+  root.setProperty('--wine-dark',p.wineDark);
+  root.setProperty('--gold',p.gold);
+  root.setProperty('--blush',p.blush);
+  root.setProperty('--blush-deep',p.blushDeep);
 }
 
 /* ================= ACTIVITY LOG (streak) ================= */
@@ -997,24 +1078,84 @@ function computeStreak(log){
   return streak;
 }
 
-/* ================= TIMETABLE ================= */
+/* ================= MUST-DO TODAY CHECKLIST ================= */
+async function addMustDo(){
+  const text=document.getElementById('mustDoInput').value.trim();
+  if(!text){alert('Task likho pehle.');return;}
+  const list=await sGet('mustdo:'+todayStr(),[]);
+  list.push({id:uid(),text,done:false});
+  await sSet('mustdo:'+todayStr(),list);
+  document.getElementById('mustDoInput').value='';
+  await logActivity();
+  renderMustDo();
+}
+async function renderMustDo(){
+  const list=await sGet('mustdo:'+todayStr(),[]);
+  const wrap=document.getElementById('mustDoList');
+  if(!list.length){wrap.innerHTML='<div class="empty-state">Aaj ke liye koi must-do task add nahi hua.</div>';return;}
+  wrap.innerHTML=list.map(t=>`
+    <div class="timeslot-row ${t.done?'done':''}">
+      <button class="check-round ${t.done?'on':''}" onclick="toggleMustDo('${t.id}',event)">${t.done?'✓':''}</button>
+      <div style="flex:1;min-width:140px;" class="${t.done?'chapter-name done':'chapter-name'}">${escapeHtml(t.text)}</div>
+      <button class="btn danger small admin-only" onclick="deleteMustDo('${t.id}')">🗑</button>
+    </div>`).join('');
+}
+async function toggleMustDo(id,ev){
+  const list=await sGet('mustdo:'+todayStr(),[]);
+  const item=list.find(x=>x.id===id); if(!item)return;
+  item.done=!item.done;
+  await sSet('mustdo:'+todayStr(),list);
+  if(item.done && ev)burstConfetti(ev.clientX,ev.clientY);
+  renderMustDo();
+}
+async function deleteMustDo(id){
+  const list=await sGet('mustdo:'+todayStr(),[]);
+  await sSet('mustdo:'+todayStr(),list.filter(x=>x.id!==id));
+  renderMustDo();
+}
+
+/* ================= TIMETABLE (date-wise) ================= */
+let selectedTimetableDate=null;
+function initTimetableDate(){
+  selectedTimetableDate=todayStr();
+  document.getElementById('timetableDateInput').value=selectedTimetableDate;
+  updateTimetableDateLabel();
+}
+function updateTimetableDateLabel(){
+  const label=document.getElementById('timetableDateLabel');
+  const isToday=selectedTimetableDate===todayStr();
+  label.textContent=isToday?"Today's Timetable":new Date(selectedTimetableDate).toLocaleDateString([], {weekday:'long',day:'2-digit',month:'short',year:'numeric'});
+}
+function setTimetableDate(date){
+  selectedTimetableDate=date;
+  document.getElementById('timetableDateInput').value=date;
+  updateTimetableDateLabel();
+  renderSlots();
+}
+function shiftTimetableDate(delta){
+  const d=new Date(selectedTimetableDate);
+  d.setDate(d.getDate()+delta);
+  setTimetableDate(d.toISOString().slice(0,10));
+}
 async function addSlot(){
   const time=document.getElementById('slotTime').value.trim();
   const subject=document.getElementById('slotSubject').value;
   const task=document.getElementById('slotTask').value.trim();
   if(!time||!task){alert('Time aur task dono bharo.');return;}
-  const list=await sGet('timetable:current',[]);
+  const key='timetable:'+selectedTimetableDate;
+  const list=await sGet(key,[]);
   list.push({id:uid(),time,subject,task,done:false});
-  const ok=await sSet('timetable:current',list);
+  const ok=await sSet(key,list);
   if(!ok){alert('Save fail ho gaya, dobara try karo.');return;}
   document.getElementById('slotTime').value='';document.getElementById('slotTask').value='';
   await logActivity();
   renderSlots();updateHomeStats();
 }
 async function renderSlots(){
-  const list=await sGet('timetable:current',[]);
+  const key='timetable:'+selectedTimetableDate;
+  const list=await sGet(key,[]);
   const wrap=document.getElementById('slotList');
-  if(!list.length){wrap.innerHTML='<div class="empty-state">Aaj ke liye koi slot add nahi hua abhi.</div>';return;}
+  if(!list.length){wrap.innerHTML='<div class="empty-state">Is date ke liye koi slot add nahi hua abhi.</div>';return;}
   wrap.innerHTML=list.map(s=>`
     <div class="timeslot-row ${s.done?'done':''}">
       <button class="check-round ${s.done?'on':''}" onclick="toggleSlot('${s.id}',event)">${s.done?'✓':''}</button>
@@ -1025,17 +1166,19 @@ async function renderSlots(){
     </div>`).join('');
 }
 async function toggleSlot(id,ev){
-  const list=await sGet('timetable:current',[]);
+  const key='timetable:'+selectedTimetableDate;
+  const list=await sGet(key,[]);
   const item=list.find(x=>x.id===id); if(!item)return;
   item.done=!item.done;
-  await sSet('timetable:current',list);
+  await sSet(key,list);
   if(item.done){await logActivity();if(ev)burstConfetti(ev.clientX,ev.clientY);}
   renderSlots();updateHomeStats();
 }
 async function deleteSlot(id){
   if(!confirm('Ye slot delete karna hai?'))return;
-  const list=await sGet('timetable:current',[]);
-  await sSet('timetable:current',list.filter(x=>x.id!==id));
+  const key='timetable:'+selectedTimetableDate;
+  const list=await sGet(key,[]);
+  await sSet(key,list.filter(x=>x.id!==id));
   renderSlots();updateHomeStats();
 }
 
@@ -1077,7 +1220,7 @@ async function deleteStudyLog(id){
 }
 
 /* ================= SYLLABUS TRACKER ================= */
-const SUBJECTS=['Physics','Chemistry','Botany','Zoology'];
+const SUBJECTS=['Physics','Organic Chemistry','Inorganic Chemistry','Physical Chemistry','Botany','Zoology'];
 let activeSubject='Physics';
 function renderSubjTabs(){document.getElementById('subjTabs').innerHTML=SUBJECTS.map(s=>`<button class="subj-btn ${s===activeSubject?'active':''}" onclick="setSubject('${s}')">${s}</button>`).join('');}
 function setSubject(s){activeSubject=s;renderSubjTabs();renderChapters();}
@@ -1110,6 +1253,7 @@ async function renderChapters(){
       <button class="btn ghost small" onclick="setCurrentChapter('${c.id}')" title="Mark as currently studying">📌</button>
       <button class="btn ghost small" onclick="openChapterNotes('${c.id}','formulas','📐 Formulas')">📐</button>
       <button class="btn ghost small" onclick="openChapterNotes('${c.id}','keyPoints','⭐ Key Points')">⭐</button>
+      <button class="btn ghost small" onclick="openTopicLog('${c.id}')">📅</button>
       <button class="btn danger small admin-only" onclick="deleteChapter('${c.id}')">🗑</button>
     </div>`).join('');
 }
@@ -1192,6 +1336,49 @@ async function saveChapterNotes(id,field){
   await sSet('syllabus:'+activeSubject,list);
   closeModal();
   renderChapters();
+}
+async function openTopicLog(id){
+  const list=await sGet('syllabus:'+activeSubject,[]);
+  const c=list.find(x=>x.id===id); if(!c)return;
+  const isAdmin=!document.body.classList.contains('student-mode');
+  const topics=c.topicLog||[];
+  document.getElementById('modalBody').innerHTML=`
+    <h3>📅 Topics Covered — ${escapeHtml(c.name)}</h3>
+    ${isAdmin ? `
+      <div class="row" style="margin-bottom:14px;">
+        <input type="date" id="topicLogDate">
+        <input type="text" id="topicLogText" placeholder="Kaunsa topic padha" style="min-width:220px;">
+        <button class="btn small" onclick="addTopicLog('${id}')">+ Add</button>
+      </div>` : ''}
+    <div id="topicLogList">
+      ${topics.length ? topics.map(t=>`
+        <div class="timeslot-row">
+          <div class="time-chip">${new Date(t.date).toLocaleDateString([], {day:'2-digit',month:'short'})}</div>
+          <div style="flex:1;min-width:140px;">${escapeHtml(t.text)}</div>
+          <button class="btn danger small admin-only" onclick="deleteTopicLog('${id}','${t.id}')">🗑</button>
+        </div>`).join('') : '<div class="empty-state">Abhi tak koi topic log nahi hua is chapter ke liye.</div>'}
+    </div>
+  `;
+  document.getElementById('modalBg').classList.add('show');
+}
+async function addTopicLog(id){
+  const date=document.getElementById('topicLogDate').value || todayStr();
+  const text=document.getElementById('topicLogText').value.trim();
+  if(!text){alert('Topic likho pehle.');return;}
+  const list=await sGet('syllabus:'+activeSubject,[]);
+  const c=list.find(x=>x.id===id); if(!c)return;
+  c.topicLog=c.topicLog||[];
+  c.topicLog.unshift({id:uid(),date,text,ts:Date.now()});
+  await sSet('syllabus:'+activeSubject,list);
+  await logActivity();
+  openTopicLog(id);
+}
+async function deleteTopicLog(id,topicId){
+  const list=await sGet('syllabus:'+activeSubject,[]);
+  const c=list.find(x=>x.id===id); if(!c)return;
+  c.topicLog=(c.topicLog||[]).filter(t=>t.id!==topicId);
+  await sSet('syllabus:'+activeSubject,list);
+  openTopicLog(id);
 }
 async function setCurrentChapter(id){
   const list=await sGet('syllabus:'+activeSubject,[]);
@@ -1337,7 +1524,7 @@ async function uploadDppSolution(id){
 /* ================= NOTES LIBRARY ================= */
 let activeNotesSubject='Physics';
 function renderNotesSubjTabs(){
-  const subs=['Physics','Chemistry','Botany','Zoology','General'];
+  const subs=['Physics','Organic Chemistry','Inorganic Chemistry','Physical Chemistry','Botany','Zoology','General'];
   document.getElementById('notesSubjTabs').innerHTML=subs.map(s=>`<button class="subj-btn ${s===activeNotesSubject?'active':''}" onclick="setNotesSubject('${s}')">${s}</button>`).join('');
 }
 function setNotesSubject(s){activeNotesSubject=s;renderNotesSubjTabs();renderNotesList();}
@@ -1355,6 +1542,93 @@ async function renderNotesList(){
         <button class="btn danger small admin-only" onclick="deleteGeneric('notes','${item.id}')">🗑</button>
       </div>
     </div>`).join('');
+}
+
+/* ================= NCERT BOOKS ================= */
+let activeNcertSubject='Physics';
+function renderNcertSubjTabs(){
+  document.getElementById('ncertSubjTabs').innerHTML=SUBJECTS.map(s=>`<button class="subj-btn ${s===activeNcertSubject?'active':''}" onclick="setNcertSubject('${s}')">${s}</button>`).join('');
+}
+function setNcertSubject(s){activeNcertSubject=s;renderNcertSubjTabs();renderNcertBooks();renderReadingLog();populateReadBookSel();}
+async function addNcertBook(){
+  const title=document.getElementById('ncertTitle').value.trim();
+  const fileInput=document.getElementById('ncertFile');
+  const link=document.getElementById('ncertLink').value.trim();
+  const msg=document.getElementById('ncertMsg');
+  if(!title){msg.textContent='Title daalo pehle.';msg.style.color='#c14a35';return;}
+  if(!fileInput.files.length && !link){msg.textContent='PDF choose karo ya link paste karo.';msg.style.color='#c14a35';return;}
+  let entry={id:uid(),title,ts:Date.now()};
+  if(fileInput.files.length){
+    const f=fileInput.files[0];
+    if(f.size>3.2*1024*1024){msg.textContent='⚠️ Book 3MB se badi hai — bade PDF ke liye link (Drive) use karo.';msg.style.color='#c14a35';return;}
+    msg.textContent='Uploading...';msg.style.color='var(--text-soft)';
+    const b64=await fileToBase64(f);
+    entry.type='file';entry.fileName=f.name;entry.mime=f.type;entry.data=b64;
+  }else{entry.type='link';entry.link=link;}
+  const list=await sGet('ncert:'+activeNcertSubject,[]);
+  list.unshift(entry);
+  const ok=await sSet('ncert:'+activeNcertSubject,list);
+  if(!ok){msg.textContent='❌ Save fail ho gaya.';msg.style.color='#c14a35';return;}
+  document.getElementById('ncertTitle').value='';document.getElementById('ncertFile').value='';document.getElementById('ncertLink').value='';
+  msg.textContent='✅ Book uploaded!';msg.style.color='var(--good)';
+  renderNcertBooks();
+  populateReadBookSel();
+}
+async function renderNcertBooks(){
+  const list=await sGet('ncert:'+activeNcertSubject,[]);
+  const wrap=document.getElementById('ncertBookList');
+  if(!list.length){wrap.innerHTML='<div class="empty-state">Is subject ki koi book upload nahi hui abhi.</div>';return;}
+  wrap.innerHTML=list.map(item=>`
+    <div class="file-item">
+      <div class="file-info"><b>${escapeHtml(item.title)}</b><span><span class="tag">${item.type==='file'?'File':'Link'}</span> &nbsp;${new Date(item.ts).toLocaleDateString()}</span></div>
+      <div class="file-actions">
+        <button class="btn ghost small" onclick="viewGeneric('ncert:${activeNcertSubject}','${item.id}')">👁 View</button>
+        ${item.type==='file'?`<a class="btn ghost small" style="text-decoration:none;" href="${item.data}" download="${item.fileName}">⬇ Download</a>`:''}
+        <button class="btn danger small admin-only" onclick="deleteNcertBook('${item.id}')">🗑</button>
+      </div>
+    </div>`).join('');
+}
+async function deleteNcertBook(id){
+  if(!confirm('Ye book delete karni hai?'))return;
+  const list=await sGet('ncert:'+activeNcertSubject,[]);
+  await sSet('ncert:'+activeNcertSubject,list.filter(x=>x.id!==id));
+  renderNcertBooks();
+}
+async function populateReadBookSel(){
+  const books=await sGet('ncert:'+activeNcertSubject,[]);
+  const sel=document.getElementById('readBookSel');
+  sel.innerHTML='<option value="">-- Book choose karo (optional) --</option>'+books.map(b=>`<option value="${escapeHtml(b.title)}">${escapeHtml(b.title)}</option>`).join('');
+}
+async function addReadingLog(){
+  const date=document.getElementById('readDate').value || todayStr();
+  const portion=document.getElementById('readPortion').value.trim();
+  const book=document.getElementById('readBookSel').value;
+  if(!portion){alert('Kitna padha wo likho.');return;}
+  const list=await sGet('ncert:readlog',[]);
+  list.unshift({id:uid(),date,subject:activeNcertSubject,book,portion,ts:Date.now()});
+  await sSet('ncert:readlog',list);
+  document.getElementById('readPortion').value='';document.getElementById('readDate').value='';
+  await logActivity();
+  renderReadingLog();
+  burstConfetti(window.innerWidth/2,300);
+}
+async function renderReadingLog(){
+  const all=await sGet('ncert:readlog',[]);
+  const list=all.filter(l=>l.subject===activeNcertSubject);
+  const wrap=document.getElementById('readingLogList');
+  if(!list.length){wrap.innerHTML='<div class="empty-state">Is subject ki koi reading log entry nahi hui abhi.</div>';return;}
+  wrap.innerHTML=list.slice(0,40).map(l=>`
+    <div class="timeslot-row">
+      <div class="time-chip">${new Date(l.date).toLocaleDateString([], {day:'2-digit',month:'short'})}</div>
+      ${l.book?`<span class="tag">📗 ${escapeHtml(l.book)}</span>`:''}
+      <div style="flex:1;min-width:140px;">${escapeHtml(l.portion)}</div>
+      <button class="btn danger small admin-only" onclick="deleteReadingLog('${l.id}')">🗑</button>
+    </div>`).join('');
+}
+async function deleteReadingLog(id){
+  const all=await sGet('ncert:readlog',[]);
+  await sSet('ncert:readlog',all.filter(l=>l.id!==id));
+  renderReadingLog();
 }
 
 /* ================= UPLOAD CENTER ================= */
@@ -1471,7 +1745,7 @@ async function updateHomeStats(){
   document.getElementById('homeSyllabusText').textContent=totalChapters?doneChapters+' of '+totalChapters+' chapters complete':'Nothing added yet';
   document.getElementById('homeSyllabusBar').style.width=(totalChapters?Math.round(doneChapters/totalChapters*100):0)+'%';
 
-  const slots=await sGet('timetable:current',[]);
+  const slots=await sGet('timetable:'+todayStr(),[]);
   const doneSlots=slots.filter(s=>s.done).length;
   document.getElementById('homePlanText').textContent=slots.length?doneSlots+' of '+slots.length+' tasks done today':'No slots set for today';
   document.getElementById('homePlanBar').style.width=(slots.length?Math.round(doneSlots/slots.length*100):0)+'%';
@@ -1693,7 +1967,7 @@ async function generateMcqFromPdf(){
   if(!text.trim()){msg.textContent='Is file/text mein kuch mila nahi.';msg.style.color='#c14a35';return;}
 
   msg.textContent='🤖 AI questions detect kar rahi hai...';msg.style.color='var(--text-soft);';
-  const sys='You are an expert NEET exam question extractor. Given raw text from a question paper, extract every multiple-choice question you can find. For each question, provide exactly 4 options. If the source text contains an answer key, use it to set the correct option index (0-3). If no answer key is present, use your own subject knowledge (Physics/Chemistry/Botany/Zoology, NEET level) to determine the single best correct option yourself — never leave it null. Respond with ONLY a raw JSON array, no markdown, no explanation, in this exact shape: [{"text":"question text","options":["A","B","C","D"],"correct":0}]. Extract at most 20 questions.';
+  const sys='You are an expert NEET exam question extractor. Given raw text from a question paper, extract every multiple-choice question you can find. For each question, provide exactly 4 options. If the source text contains an answer key, use it to set the correct option index (0-3). If no answer key is present, use your own subject knowledge (Physics/Organic Chemistry/Inorganic Chemistry/Physical Chemistry/Botany/Zoology, NEET level) to determine the single best correct option yourself — never leave it null. Respond with ONLY a raw JSON array, no markdown, no explanation, in this exact shape: [{"text":"question text","options":["A","B","C","D"],"correct":0}]. Extract at most 20 questions.';
   const {ok,text:out,reason}=await askAI(text,sys);
   if(!ok){
     if(reason==='no-key'){msg.innerHTML='❌ AI key set nahi hai. <button class="btn ghost small" onclick="openAiSettings()">⚙️ AI Settings kholo</button>';}
@@ -1740,7 +2014,7 @@ function renderBuilder(){
       ${q.options.map((o,j)=>`<div class="opt-row"><input type="radio" name="correct-${q.id}" ${q.correct===j?'checked':''} onchange="builderQuestions[${i}].correct=${j}"><input type="text" placeholder="Option ${String.fromCharCode(65+j)}" value="${escapeHtml(o)}" oninput="builderQuestions[${i}].options[${j}]=this.value"></div>`).join('')}
       <div class="row" style="margin-top:6px;">
         <select onchange="builderQuestions[${i}].subject=this.value" style="font-size:12px;">
-          ${['Physics','Chemistry','Botany','Zoology'].map(s=>`<option ${q.subject===s?'selected':''}>${s}</option>`).join('')}
+          ${['Physics','Organic Chemistry','Inorganic Chemistry','Physical Chemistry','Botany','Zoology'].map(s=>`<option ${q.subject===s?'selected':''}>${s}</option>`).join('')}
         </select>
         <button class="btn danger small" onclick="removeBuilderQ(${i})">Remove Question</button>
       </div>
@@ -2040,7 +2314,7 @@ async function askDoubt(){
   if(!q){alert('Pehle apna doubt likho.');return;}
   const box=document.getElementById('doubtAnswer');
   box.innerHTML='<div class="ai-box">🤖 Soch rahi hai...</div>';
-  const sys="You are a warm, encouraging NEET tutor (Physics/Chemistry/Botany/Zoology). Answer the student's doubt clearly in simple Hinglish, step by step if needed. Keep it focused and under 200 words.";
+  const sys="You are a warm, encouraging NEET tutor (Physics/Organic Chemistry/Inorganic Chemistry/Physical Chemistry/Botany/Zoology). Answer the student's doubt clearly in simple Hinglish, step by step if needed. Keep it focused and under 200 words.";
   const {ok,text:ans,reason}=await askAI(q,sys);
   if(!ok){
     box.innerHTML=reason==='no-key'
@@ -2321,7 +2595,8 @@ function setupRealtimeSync(){
 function refreshCurrentView(key){
   const activeId=document.querySelector('.view.active') ? document.querySelector('.view.active').id : 'home';
   if(activeId==='home')updateHomeStats();
-  else if(activeId==='timetable'){renderSlots();renderStudyLog();}
+  else if(activeId==='ncert'){renderNcertBooks();renderReadingLog();}
+  else if(activeId==='timetable'){renderSlots();renderStudyLog();renderMustDo();}
   else if(activeId==='syllabus')renderChapters();
   else if(activeId==='dpp')renderDppList();
   else if(activeId==='notes')renderNotesList();
