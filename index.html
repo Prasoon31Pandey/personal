@@ -466,21 +466,6 @@ footer{text-align:center;padding:28px 0;color:var(--text-soft);font-size:12px;}
       </div>
     </div>
     <div id="slotList" style="margin-top:18px;"></div>
-
-    <h3 style="color:var(--wine-dark);margin-top:30px;">📚 Daily Study Log</h3>
-    <p style="color:var(--text-soft);font-size:12.5px;">Kis din kaun sa subject/topic padha, aur kaunsa lecture number tha — sab yahan record ho jayega.</p>
-    <div class="add-form" style="margin-bottom:16px;">
-      <div class="row" style="margin-bottom:8px;">
-        <input type="date" id="logDate">
-        <select id="logSubject"><option>Physics</option><option>Organic Chemistry</option><option>Inorganic Chemistry</option><option>Physical Chemistry</option><option>Botany</option><option>Zoology</option><option>Revision</option></select>
-      </div>
-      <div class="row" style="margin-bottom:8px;">
-        <input type="text" id="logTopic" placeholder="Topic / Chapter (e.g. Human Reproduction)" style="min-width:240px;">
-        <input type="text" id="logLecture" placeholder="Lecture no. (e.g. Lecture 5)" style="width:160px;">
-      </div>
-      <button class="btn" onclick="addStudyLog()">💾 Save Entry</button>
-    </div>
-    <div id="studyLogList"></div>
   </div>
 </section>
 
@@ -489,15 +474,36 @@ footer{text-align:center;padding:28px 0;color:var(--text-soft);font-size:12px;}
   <div class="wrap">
     <div class="section-title"><h2>Syllabus Tracker</h2><span class="pill-note">Chapter-wise progress</span></div>
     <div class="subject-tabs" id="subjTabs"></div>
+
+    <div class="card" style="margin-bottom:16px;" id="subjSummaryCard"></div>
+
     <div class="card" style="margin-bottom:16px;">
       <div class="progress-track" style="height:12px;"><div class="progress-fill" id="subjBar" style="width:0%"></div></div>
       <p id="subjBarText" style="margin:8px 0 0;color:var(--text-soft);font-size:12.5px;">0 of 0 chapters complete</p>
     </div>
     <div class="add-form admin-only" style="margin-bottom:18px;">
       <h3>Add Chapter</h3>
-      <div class="row"><input type="text" id="chapterName" placeholder="Chapter name" style="min-width:260px;"><button class="btn" onclick="addChapter()">+ Add Chapter</button></div>
+      <div class="row">
+        <input type="text" id="chapterName" placeholder="Chapter name" style="min-width:220px;">
+        <input type="number" id="chapterTargetLectures" placeholder="Total lectures (e.g. 8)" style="width:170px;" min="0">
+        <button class="btn" onclick="addChapter()">+ Add Chapter</button>
+      </div>
     </div>
     <div id="chapterList"></div>
+
+    <h3 style="color:var(--wine-dark);margin-top:30px;">🎥 Lecture Log</h3>
+    <p style="color:var(--text-soft);font-size:12.5px;">Kis din kaunsi chapter ka kaunsa lecture liya — chapter se link hoga taaki pending lectures track ho sake.</p>
+    <div class="add-form" style="margin-bottom:16px;">
+      <div class="row" style="margin-bottom:8px;">
+        <input type="date" id="logDate">
+        <select id="logChapterSel"><option value="">-- Chapter choose karo --</option></select>
+      </div>
+      <div class="row" style="margin-bottom:8px;">
+        <input type="text" id="logLecture" placeholder="Lecture label (e.g. Lecture 5 - Diffusion)" style="min-width:260px;">
+      </div>
+      <button class="btn" onclick="addStudyLog()">💾 Save Entry</button>
+    </div>
+    <div id="studyLogList"></div>
   </div>
 </section>
 
@@ -993,8 +999,9 @@ function switchTab(id){
   const btn=document.querySelector(`.tab-btn[data-tab="${id}"]`); if(btn)btn.classList.add('active');
   window.scrollTo({top:0,behavior:'smooth'});
   if(id==='progress')renderProgressPage();
+  if(id==='syllabus'){populateLogChapterSel();renderStudyLog();}
   if(id==='us')renderUsPage();
-  if(id==='timetable'){if(!selectedTimetableDate)initTimetableDate();renderSlots();renderStudyLog();renderMustDo();}
+  if(id==='timetable'){if(!selectedTimetableDate)initTimetableDate();renderSlots();renderMustDo();}
   if(id==='ncert'){renderNcertSubjTabs();renderNcertBooks();renderReadingLog();populateReadBookSel();}
 }
 document.querySelectorAll('.tab-btn').forEach(b=>b.addEventListener('click',()=>switchTab(b.dataset.tab)));
@@ -1182,34 +1189,41 @@ async function deleteSlot(id){
   renderSlots();updateHomeStats();
 }
 
-/* ================= DAILY STUDY LOG ================= */
+/* ================= LECTURE LOG (chapter-linked) ================= */
+async function populateLogChapterSel(){
+  const list=await sGet('syllabus:'+activeSubject,[]);
+  const sel=document.getElementById('logChapterSel');
+  if(!sel)return;
+  sel.innerHTML='<option value="">-- Chapter choose karo --</option>'+list.map(c=>`<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
+}
 async function addStudyLog(){
   const date=document.getElementById('logDate').value || todayStr();
-  const subject=document.getElementById('logSubject').value;
-  const topic=document.getElementById('logTopic').value.trim();
+  const chapterId=document.getElementById('logChapterSel').value;
   const lecture=document.getElementById('logLecture').value.trim();
-  if(!topic){alert('Topic/chapter likho pehle.');return;}
+  if(!chapterId){alert('Pehle ek chapter choose karo.');return;}
+  if(!lecture){alert('Lecture label likho.');return;}
   const list=await sGet('studylog:all',[]);
-  list.unshift({id:uid(),date,subject,topic,lecture,ts:Date.now()});
+  list.unshift({id:uid(),date,subject:activeSubject,chapterId,lecture,ts:Date.now()});
   const ok=await sSet('studylog:all',list);
   if(!ok){alert('Save fail ho gaya.');return;}
-  document.getElementById('logTopic').value='';document.getElementById('logLecture').value='';document.getElementById('logDate').value='';
+  document.getElementById('logLecture').value='';document.getElementById('logDate').value='';
   await logActivity();
   renderStudyLog();
+  renderChapters();
   burstConfetti(window.innerWidth/2,300);
 }
 async function renderStudyLog(){
-  const list=await sGet('studylog:all',[]);
+  const all=await sGet('studylog:all',[]);
+  const chapters=await sGet('syllabus:'+activeSubject,[]);
+  const chapterName=id=>{const c=chapters.find(x=>x.id===id);return c?c.name:'(deleted chapter)';};
+  const list=all.filter(l=>l.subject===activeSubject);
   const wrap=document.getElementById('studyLogList');
-  if(!list.length){wrap.innerHTML='<div class="empty-state">Abhi tak koi study log entry nahi hui.</div>';return;}
-  const bySubjectCount={};
-  list.forEach(l=>{bySubjectCount[l.subject]=(bySubjectCount[l.subject]||0)+1;});
-  const summary=Object.entries(bySubjectCount).map(([s,c])=>`<span class="tag" style="margin-right:6px;">${escapeHtml(s)}: ${c} lectures</span>`).join('');
-  wrap.innerHTML=`<div class="card" style="margin-bottom:14px;">${summary}</div>`+list.slice(0,60).map(l=>`
+  if(!list.length){wrap.innerHTML='<div class="empty-state">Is subject ki abhi koi lecture log nahi hui.</div>';return;}
+  wrap.innerHTML=`<div class="card" style="margin-bottom:14px;"><span class="tag">${activeSubject}: ${list.length} lectures logged</span></div>`+list.slice(0,60).map(l=>`
     <div class="timeslot-row">
       <div class="time-chip">${new Date(l.date).toLocaleDateString([], {day:'2-digit',month:'short'})}</div>
-      <span class="tag">${escapeHtml(l.subject)}</span>
-      <div style="flex:1;min-width:140px;">${escapeHtml(l.topic)} ${l.lecture?`<span style="color:var(--text-soft);font-size:11.5px;">(${escapeHtml(l.lecture)})</span>`:''}</div>
+      <span class="tag">${escapeHtml(chapterName(l.chapterId))}</span>
+      <div style="flex:1;min-width:140px;">${escapeHtml(l.lecture)}</div>
       <button class="btn danger small admin-only" onclick="deleteStudyLog('${l.id}')">🗑</button>
     </div>`).join('');
 }
@@ -1217,34 +1231,59 @@ async function deleteStudyLog(id){
   const list=await sGet('studylog:all',[]);
   await sSet('studylog:all',list.filter(l=>l.id!==id));
   renderStudyLog();
+  renderChapters();
 }
 
 /* ================= SYLLABUS TRACKER ================= */
 const SUBJECTS=['Physics','Organic Chemistry','Inorganic Chemistry','Physical Chemistry','Botany','Zoology'];
 let activeSubject='Physics';
 function renderSubjTabs(){document.getElementById('subjTabs').innerHTML=SUBJECTS.map(s=>`<button class="subj-btn ${s===activeSubject?'active':''}" onclick="setSubject('${s}')">${s}</button>`).join('');}
-function setSubject(s){activeSubject=s;renderSubjTabs();renderChapters();}
+function setSubject(s){activeSubject=s;renderSubjTabs();renderChapters();populateLogChapterSel();renderStudyLog();}
 async function addChapter(){
   const name=document.getElementById('chapterName').value.trim();
+  const targetLectures=parseInt(document.getElementById('chapterTargetLectures').value)||0;
   if(!name){alert('Chapter ka naam likho.');return;}
   const list=await sGet('syllabus:'+activeSubject,[]);
-  list.push({id:uid(),name,ncert:false,notesDone:false,revised:false,complete:false});
+  list.push({id:uid(),name,ncert:false,notesDone:false,revised:false,complete:false,targetLectures});
   const ok=await sSet('syllabus:'+activeSubject,list);
   if(!ok){alert('Save fail ho gaya.');return;}
-  document.getElementById('chapterName').value='';
-  renderChapters();updateHomeStats();
+  document.getElementById('chapterName').value='';document.getElementById('chapterTargetLectures').value='';
+  renderChapters();populateLogChapterSel();updateHomeStats();
+}
+async function renderSubjSummary(){
+  const list=await sGet('syllabus:'+activeSubject,[]);
+  const allLogs=await sGet('studylog:all',[]);
+  const box=document.getElementById('subjSummaryCard');
+  if(!list.length){box.innerHTML=`<span style="color:var(--text-soft);">Abhi is subject mein koi chapter add nahi hua.</span>`;return;}
+  const remaining=list.filter(c=>!c.complete).length;
+  const ongoing=list.find(c=>c.current);
+  let ongoingHtml='<span style="color:var(--text-soft);">Koi chapter currently studying nahi hai — 📌 se pin karo.</span>';
+  if(ongoing){
+    const done=allLogs.filter(l=>l.chapterId===ongoing.id).length;
+    const target=ongoing.targetLectures||0;
+    const pending=target?Math.max(0,target-done):null;
+    ongoingHtml=`📖 <b>Ongoing:</b> ${escapeHtml(ongoing.name)} &nbsp; · &nbsp; 🎥 ${done}${target?'/'+target:''} lectures done ${pending!==null?`&nbsp;·&nbsp; <b style="color:var(--wine);">${pending} pending</b>`:''}`;
+  }
+  box.innerHTML=`<div style="margin-bottom:6px;">${ongoingHtml}</div><div style="color:var(--text-soft);font-size:12.5px;">📚 ${remaining} of ${list.length} chapters remaining</div>`;
 }
 async function renderChapters(){
   const list=await sGet('syllabus:'+activeSubject,[]);
+  const allLogs=await sGet('studylog:all',[]);
   const wrap=document.getElementById('chapterList');
   const doneCount=list.filter(c=>c.complete).length;
   document.getElementById('subjBar').style.width=(list.length?Math.round(doneCount/list.length*100):0)+'%';
   document.getElementById('subjBarText').textContent=`${doneCount} of ${list.length} chapters complete (${activeSubject})`;
+  renderSubjSummary();
   if(!list.length){wrap.innerHTML='<div class="empty-state">Is subject mein abhi koi chapter add nahi hua.</div>';return;}
-  wrap.innerHTML=list.map(c=>`
+  wrap.innerHTML=list.map(c=>{
+    const lecturesDone=allLogs.filter(l=>l.chapterId===c.id).length;
+    const lectureBadge=c.targetLectures
+      ? `<span class="tag" style="background:${lecturesDone>=c.targetLectures?'var(--good)':'var(--blush)'};color:${lecturesDone>=c.targetLectures?'#fff':'var(--wine-dark)'};">🎥 ${lecturesDone}/${c.targetLectures}</span>`
+      : (lecturesDone?`<span class="tag">🎥 ${lecturesDone} lectures</span>`:'');
+    return `
     <div class="chapter-row ${c.complete?'complete':''}">
       <button class="check-round ${c.complete?'on':''}" onclick="toggleChapterComplete('${c.id}',event)">${c.complete?'✓':''}</button>
-      <div class="chapter-name ${c.complete?'done':''}">${escapeHtml(c.name)} ${c.current?'<span class="tag" style="background:var(--gold);color:#fff;">📖 Currently Studying</span>':''}</div>
+      <div class="chapter-name ${c.complete?'done':''}">${escapeHtml(c.name)} ${c.current?'<span class="tag" style="background:var(--gold);color:#fff;">📖 Currently Studying</span>':''} ${lectureBadge}</div>
       <div class="mini-checks">
         <span class="mini-chip ${c.ncert?'on':''}" onclick="toggleChapterField('${c.id}','ncert')">NCERT</span>
         <span class="mini-chip ${c.notesDone?'on':''}" onclick="toggleChapterField('${c.id}','notesDone')">Notes</span>
@@ -1255,7 +1294,8 @@ async function renderChapters(){
       <button class="btn ghost small" onclick="openChapterNotes('${c.id}','keyPoints','⭐ Key Points')">⭐</button>
       <button class="btn ghost small" onclick="openTopicLog('${c.id}')">📅</button>
       <button class="btn danger small admin-only" onclick="deleteChapter('${c.id}')">🗑</button>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 async function openChapterNotes(id,field,label){
   const list=await sGet('syllabus:'+activeSubject,[]);
@@ -2596,8 +2636,8 @@ function refreshCurrentView(key){
   const activeId=document.querySelector('.view.active') ? document.querySelector('.view.active').id : 'home';
   if(activeId==='home')updateHomeStats();
   else if(activeId==='ncert'){renderNcertBooks();renderReadingLog();}
-  else if(activeId==='timetable'){renderSlots();renderStudyLog();renderMustDo();}
-  else if(activeId==='syllabus')renderChapters();
+  else if(activeId==='timetable'){renderSlots();renderMustDo();}
+  else if(activeId==='syllabus'){renderChapters();renderStudyLog();}
   else if(activeId==='dpp')renderDppList();
   else if(activeId==='notes')renderNotesList();
   else if(activeId==='upload')renderFileList();
