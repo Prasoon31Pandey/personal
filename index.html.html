@@ -439,12 +439,27 @@ footer{text-align:center;padding:28px 0;color:var(--text-soft);font-size:12px;}
       <h3>Add a Time Slot</h3>
       <div class="row">
         <input type="text" id="slotTime" placeholder="Time e.g. 6:00 AM - 7:00 AM" style="min-width:200px;">
-        <select id="slotSubject"><option>Biology</option><option>Physics</option><option>Chemistry</option><option>Revision</option><option>Break</option><option>General</option></select>
+        <select id="slotSubject"><option>Physics</option><option>Chemistry</option><option>Botany</option><option>Zoology</option><option>Revision</option><option>Break</option><option>General</option></select>
         <input type="text" id="slotTask" placeholder="Task (e.g. NCERT Ch.12 reading)" style="min-width:220px;">
         <button class="btn" onclick="addSlot()">+ Add Slot</button>
       </div>
     </div>
     <div id="slotList" style="margin-top:18px;"></div>
+
+    <h3 style="color:var(--wine-dark);margin-top:30px;">📚 Daily Study Log</h3>
+    <p style="color:var(--text-soft);font-size:12.5px;">Kis din kaun sa subject/topic padha, aur kaunsa lecture number tha — sab yahan record ho jayega.</p>
+    <div class="add-form" style="margin-bottom:16px;">
+      <div class="row" style="margin-bottom:8px;">
+        <input type="date" id="logDate">
+        <select id="logSubject"><option>Physics</option><option>Chemistry</option><option>Botany</option><option>Zoology</option><option>Revision</option></select>
+      </div>
+      <div class="row" style="margin-bottom:8px;">
+        <input type="text" id="logTopic" placeholder="Topic / Chapter (e.g. Human Reproduction)" style="min-width:240px;">
+        <input type="text" id="logLecture" placeholder="Lecture no. (e.g. Lecture 5)" style="width:160px;">
+      </div>
+      <button class="btn" onclick="addStudyLog()">💾 Save Entry</button>
+    </div>
+    <div id="studyLogList"></div>
   </div>
 </section>
 
@@ -478,7 +493,7 @@ footer{text-align:center;padding:28px 0;color:var(--text-soft);font-size:12px;}
       <h3>Upload New DPP</h3>
       <div class="row" style="margin-bottom:10px;">
         <input type="text" id="dppTitle" placeholder="Title e.g. Biology DPP 12" style="min-width:220px;">
-        <select id="dppSubject"><option>Biology</option><option>Physics</option><option>Chemistry</option></select>
+        <select id="dppSubject"><option>Physics</option><option>Chemistry</option><option>Botany</option><option>Zoology</option></select>
       </div>
       <div class="row" style="margin-bottom:10px;">
         <input type="file" id="dppFile"><span style="color:var(--text-soft);font-size:12px;">— or —</span>
@@ -541,7 +556,7 @@ footer{text-align:center;padding:28px 0;color:var(--text-soft);font-size:12px;}
       <h3 id="uploaderTitle">Add to Syllabus</h3>
       <div class="row" style="margin-bottom:10px;">
         <input type="text" id="itemTitle" placeholder="Title" style="min-width:220px;">
-        <select id="itemSubject"><option value="General">General</option><option value="Biology">Biology</option><option value="Physics">Physics</option><option value="Chemistry">Chemistry</option></select>
+        <select id="itemSubject"><option value="General">General</option><option value="Physics">Physics</option><option value="Chemistry">Chemistry</option><option value="Botany">Botany</option><option value="Zoology">Zoology</option></select>
       </div>
       <div class="row" style="margin-bottom:10px;">
         <input type="file" id="itemFile"><span style="color:var(--text-soft);font-size:12px;">— or —</span>
@@ -564,7 +579,7 @@ footer{text-align:center;padding:28px 0;color:var(--text-soft);font-size:12px;}
         <p style="color:var(--text-soft);font-size:12.5px;margin-top:0;">Question-paper PDF upload karo — AI khud questions, options aur answers detect karke test bana dega. Answer key na mile to AI khud solve karke sahi answer bhi de dega.</p>
         <div class="row" style="margin-bottom:10px;">
           <input type="text" id="aiTestName" placeholder="Test name" style="min-width:220px;">
-          <select id="aiTestSubject"><option>Biology</option><option>Physics</option><option>Chemistry</option><option>Mixed</option></select>
+          <select id="aiTestSubject"><option>Physics</option><option>Chemistry</option><option>Botany</option><option>Zoology</option><option>Mixed</option></select>
           <input type="file" id="aiPdfFile" accept="application/pdf">
         </div>
         <textarea id="aiPastedText" placeholder="...ya seedha question paper ka text yahan paste karo (PDF ki jagah)" rows="3" style="width:100%;margin-bottom:10px;"></textarea>
@@ -577,7 +592,7 @@ footer{text-align:center;padding:28px 0;color:var(--text-soft);font-size:12px;}
         <div class="row" style="margin-bottom:10px;">
           <input type="text" id="testName" placeholder="Test name" style="min-width:260px;">
           <input type="number" id="testMinutes" placeholder="Duration (mins)" value="30" style="width:120px;">
-          <select id="testSubject"><option>Biology</option><option>Physics</option><option>Chemistry</option><option>Mixed</option></select>
+          <select id="testSubject"><option>Physics</option><option>Chemistry</option><option>Botany</option><option>Zoology</option><option>Mixed</option></select>
         </div>
         <div class="row" style="margin-bottom:10px;">
           <input type="url" id="testPaperLink" placeholder="Optional: link to original question-paper PDF" style="flex:1;min-width:220px;">
@@ -919,6 +934,7 @@ function switchTab(id){
   window.scrollTo({top:0,behavior:'smooth'});
   if(id==='progress')renderProgressPage();
   if(id==='us')renderUsPage();
+  if(id==='timetable')renderStudyLog();
 }
 document.querySelectorAll('.tab-btn').forEach(b=>b.addEventListener('click',()=>switchTab(b.dataset.tab)));
 
@@ -1023,9 +1039,46 @@ async function deleteSlot(id){
   renderSlots();updateHomeStats();
 }
 
+/* ================= DAILY STUDY LOG ================= */
+async function addStudyLog(){
+  const date=document.getElementById('logDate').value || todayStr();
+  const subject=document.getElementById('logSubject').value;
+  const topic=document.getElementById('logTopic').value.trim();
+  const lecture=document.getElementById('logLecture').value.trim();
+  if(!topic){alert('Topic/chapter likho pehle.');return;}
+  const list=await sGet('studylog:all',[]);
+  list.unshift({id:uid(),date,subject,topic,lecture,ts:Date.now()});
+  const ok=await sSet('studylog:all',list);
+  if(!ok){alert('Save fail ho gaya.');return;}
+  document.getElementById('logTopic').value='';document.getElementById('logLecture').value='';document.getElementById('logDate').value='';
+  await logActivity();
+  renderStudyLog();
+  burstConfetti(window.innerWidth/2,300);
+}
+async function renderStudyLog(){
+  const list=await sGet('studylog:all',[]);
+  const wrap=document.getElementById('studyLogList');
+  if(!list.length){wrap.innerHTML='<div class="empty-state">Abhi tak koi study log entry nahi hui.</div>';return;}
+  const bySubjectCount={};
+  list.forEach(l=>{bySubjectCount[l.subject]=(bySubjectCount[l.subject]||0)+1;});
+  const summary=Object.entries(bySubjectCount).map(([s,c])=>`<span class="tag" style="margin-right:6px;">${escapeHtml(s)}: ${c} lectures</span>`).join('');
+  wrap.innerHTML=`<div class="card" style="margin-bottom:14px;">${summary}</div>`+list.slice(0,60).map(l=>`
+    <div class="timeslot-row">
+      <div class="time-chip">${new Date(l.date).toLocaleDateString([], {day:'2-digit',month:'short'})}</div>
+      <span class="tag">${escapeHtml(l.subject)}</span>
+      <div style="flex:1;min-width:140px;">${escapeHtml(l.topic)} ${l.lecture?`<span style="color:var(--text-soft);font-size:11.5px;">(${escapeHtml(l.lecture)})</span>`:''}</div>
+      <button class="btn danger small admin-only" onclick="deleteStudyLog('${l.id}')">🗑</button>
+    </div>`).join('');
+}
+async function deleteStudyLog(id){
+  const list=await sGet('studylog:all',[]);
+  await sSet('studylog:all',list.filter(l=>l.id!==id));
+  renderStudyLog();
+}
+
 /* ================= SYLLABUS TRACKER ================= */
-const SUBJECTS=['Biology','Physics','Chemistry'];
-let activeSubject='Biology';
+const SUBJECTS=['Physics','Chemistry','Botany','Zoology'];
+let activeSubject='Physics';
 function renderSubjTabs(){document.getElementById('subjTabs').innerHTML=SUBJECTS.map(s=>`<button class="subj-btn ${s===activeSubject?'active':''}" onclick="setSubject('${s}')">${s}</button>`).join('');}
 function setSubject(s){activeSubject=s;renderSubjTabs();renderChapters();}
 async function addChapter(){
@@ -1055,8 +1108,90 @@ async function renderChapters(){
         <span class="mini-chip ${c.revised?'on':''}" onclick="toggleChapterField('${c.id}','revised')">Revised</span>
       </div>
       <button class="btn ghost small" onclick="setCurrentChapter('${c.id}')" title="Mark as currently studying">📌</button>
+      <button class="btn ghost small" onclick="openChapterNotes('${c.id}','formulas','📐 Formulas')">📐</button>
+      <button class="btn ghost small" onclick="openChapterNotes('${c.id}','keyPoints','⭐ Key Points')">⭐</button>
       <button class="btn danger small admin-only" onclick="deleteChapter('${c.id}')">🗑</button>
     </div>`).join('');
+}
+async function openChapterNotes(id,field,label){
+  const list=await sGet('syllabus:'+activeSubject,[]);
+  const c=list.find(x=>x.id===id); if(!c)return;
+  const isAdmin=!document.body.classList.contains('student-mode');
+  const content=c[field]||'';
+  const filesField=field+'Files';
+  const files=c[filesField]||[];
+  document.getElementById('modalBody').innerHTML=`
+    <h3>${label} — ${escapeHtml(c.name)}</h3>
+    ${isAdmin
+      ? `<textarea id="chapterNotesInput" rows="8" style="width:100%;font-family:'Poppins',sans-serif;" placeholder="${field==='formulas'?'Formulas likho (ek line ek formula)':'Important points likho'}">${escapeHtml(content)}</textarea>
+         <div class="row" style="margin-top:12px;"><button class="btn" onclick="saveChapterNotes('${id}','${field}')">💾 Save Text</button></div>
+         <div style="border-top:1px dashed var(--line);margin-top:18px;padding-top:14px;">
+           <h3 style="margin-bottom:8px;">📎 Ya PDF/Image upload karo</h3>
+           <div class="row" style="margin-bottom:10px;">
+             <input type="file" id="chapterFileInput" accept=".pdf,application/pdf,image/*">
+             <span style="color:var(--text-soft);font-size:12px;">— or —</span>
+             <input type="url" id="chapterLinkInput" placeholder="Paste link instead" style="min-width:200px;">
+           </div>
+           <button class="btn ghost small" onclick="uploadChapterFile('${id}','${field}')">⬆ Upload</button>
+           <span id="chapterUploadMsg" style="font-size:12px;color:var(--text-soft);margin-left:8px;"></span>
+         </div>`
+      : (content ? `<div class="ai-box" style="white-space:pre-wrap;">${escapeHtml(content)}</div>` : `<div class="empty-state">Abhi kuch text add nahi hua.</div>`)
+    }
+    <div id="chapterFilesList" style="margin-top:16px;">
+      ${files.length ? files.map(f=>`
+        <div class="file-item" style="margin-bottom:8px;">
+          <div class="file-info"><b>${f.type==='file'?escapeHtml(f.fileName||'File'):'🔗 Link'}</b><span>${new Date(f.ts).toLocaleDateString()}</span></div>
+          <div class="file-actions">
+            ${f.type==='file'
+              ? `<a class="btn ghost small" style="text-decoration:none;" href="${f.data}" download="${f.fileName}">⬇ Download</a>`
+              : `<a class="btn ghost small" style="text-decoration:none;" href="${f.link}" target="_blank">↗ Open</a>`}
+            <button class="btn danger small admin-only" onclick="deleteChapterFile('${id}','${field}','${f.id}')">🗑</button>
+          </div>
+        </div>`).join('') : ''}
+    </div>
+  `;
+  document.getElementById('modalBg').classList.add('show');
+}
+async function uploadChapterFile(id,field){
+  const list=await sGet('syllabus:'+activeSubject,[]);
+  const c=list.find(x=>x.id===id); if(!c)return;
+  const fileInput=document.getElementById('chapterFileInput');
+  const link=document.getElementById('chapterLinkInput').value.trim();
+  const msg=document.getElementById('chapterUploadMsg');
+  const filesField=field+'Files';
+  let entry;
+  if(fileInput.files.length){
+    const f=fileInput.files[0];
+    if(f.size>3.2*1024*1024){msg.textContent='⚠️ File 3MB se badi hai — link use karo.';msg.style.color='#c14a35';return;}
+    msg.textContent='Uploading...';msg.style.color='var(--text-soft)';
+    const b64=await fileToBase64(f);
+    entry={id:uid(),type:'file',fileName:f.name,data:b64,ts:Date.now()};
+  }else if(link){
+    entry={id:uid(),type:'link',link,ts:Date.now()};
+  }else{
+    msg.textContent='File choose karo ya link paste karo.';msg.style.color='#c14a35';return;
+  }
+  c[filesField]=c[filesField]||[];
+  c[filesField].push(entry);
+  const ok=await sSet('syllabus:'+activeSubject,list);
+  if(!ok){msg.textContent='❌ Save fail ho gaya.';msg.style.color='#c14a35';return;}
+  openChapterNotes(id,field,field==='formulas'?'📐 Formulas':'⭐ Key Points');
+}
+async function deleteChapterFile(id,field,fileId){
+  const list=await sGet('syllabus:'+activeSubject,[]);
+  const c=list.find(x=>x.id===id); if(!c)return;
+  const filesField=field+'Files';
+  c[filesField]=(c[filesField]||[]).filter(f=>f.id!==fileId);
+  await sSet('syllabus:'+activeSubject,list);
+  openChapterNotes(id,field,field==='formulas'?'📐 Formulas':'⭐ Key Points');
+}
+async function saveChapterNotes(id,field){
+  const list=await sGet('syllabus:'+activeSubject,[]);
+  const c=list.find(x=>x.id===id); if(!c)return;
+  c[field]=document.getElementById('chapterNotesInput').value;
+  await sSet('syllabus:'+activeSubject,list);
+  closeModal();
+  renderChapters();
 }
 async function setCurrentChapter(id){
   const list=await sGet('syllabus:'+activeSubject,[]);
@@ -1089,7 +1224,7 @@ async function deleteChapter(id){
 }
 
 /* ================= DPP ================= */
-let activeDppSubject='Biology';
+let activeDppSubject='Physics';
 function renderDppSubjTabs(){document.getElementById('dppSubjTabs').innerHTML=SUBJECTS.map(s=>`<button class="subj-btn ${s===activeDppSubject?'active':''}" onclick="setDppSubject('${s}')">${s}</button>`).join('');}
 function setDppSubject(s){activeDppSubject=s;renderDppSubjTabs();renderDppList();}
 function fileToBase64(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file);});}
@@ -1200,9 +1335,9 @@ async function uploadDppSolution(id){
 }
 
 /* ================= NOTES LIBRARY ================= */
-let activeNotesSubject='Biology';
+let activeNotesSubject='Physics';
 function renderNotesSubjTabs(){
-  const subs=['Biology','Physics','Chemistry','General'];
+  const subs=['Physics','Chemistry','Botany','Zoology','General'];
   document.getElementById('notesSubjTabs').innerHTML=subs.map(s=>`<button class="subj-btn ${s===activeNotesSubject?'active':''}" onclick="setNotesSubject('${s}')">${s}</button>`).join('');
 }
 function setNotesSubject(s){activeNotesSubject=s;renderNotesSubjTabs();renderNotesList();}
@@ -1406,7 +1541,7 @@ async function renderProgressPage(){
     {emoji:'🔥',name:'7 Day Streak',unlocked:streak>=7},
     {emoji:'🌟',name:'30 Day Streak',unlocked:streak>=30},
     {emoji:'📘',name:'10 Chapters Done',unlocked:doneChapters>=10},
-    {emoji:'🧬',name:'Biology Master',unlocked:doneChapters>=15},
+    {emoji:'🧬',name:'Botany/Zoology Master',unlocked:doneChapters>=15},
     {emoji:'📝',name:'First Test Taken',unlocked:totalTests>=1},
     {emoji:'🏆',name:'5 Tests Completed',unlocked:totalTests>=5},
   ];
@@ -1558,7 +1693,7 @@ async function generateMcqFromPdf(){
   if(!text.trim()){msg.textContent='Is file/text mein kuch mila nahi.';msg.style.color='#c14a35';return;}
 
   msg.textContent='🤖 AI questions detect kar rahi hai...';msg.style.color='var(--text-soft);';
-  const sys='You are an expert NEET exam question extractor. Given raw text from a question paper, extract every multiple-choice question you can find. For each question, provide exactly 4 options. If the source text contains an answer key, use it to set the correct option index (0-3). If no answer key is present, use your own subject knowledge (Biology/Physics/Chemistry, NEET level) to determine the single best correct option yourself — never leave it null. Respond with ONLY a raw JSON array, no markdown, no explanation, in this exact shape: [{"text":"question text","options":["A","B","C","D"],"correct":0}]. Extract at most 20 questions.';
+  const sys='You are an expert NEET exam question extractor. Given raw text from a question paper, extract every multiple-choice question you can find. For each question, provide exactly 4 options. If the source text contains an answer key, use it to set the correct option index (0-3). If no answer key is present, use your own subject knowledge (Physics/Chemistry/Botany/Zoology, NEET level) to determine the single best correct option yourself — never leave it null. Respond with ONLY a raw JSON array, no markdown, no explanation, in this exact shape: [{"text":"question text","options":["A","B","C","D"],"correct":0}]. Extract at most 20 questions.';
   const {ok,text:out,reason}=await askAI(text,sys);
   if(!ok){
     if(reason==='no-key'){msg.innerHTML='❌ AI key set nahi hai. <button class="btn ghost small" onclick="openAiSettings()">⚙️ AI Settings kholo</button>';}
@@ -1596,7 +1731,7 @@ async function renderStoryChapter(){
 
 /* ================= WEEKLY TEST BUILDER ================= */
 let builderQuestions=[];
-function addBuilderQuestion(){builderQuestions.push({id:uid(),text:'',options:['','','',''],correct:0,subject:'Biology'});renderBuilder();}
+function addBuilderQuestion(){builderQuestions.push({id:uid(),text:'',options:['','','',''],correct:0,subject:'Physics'});renderBuilder();}
 function renderBuilder(){
   document.getElementById('qBuilderList').innerHTML=builderQuestions.map((q,i)=>`
     <div class="qform">
@@ -1605,7 +1740,7 @@ function renderBuilder(){
       ${q.options.map((o,j)=>`<div class="opt-row"><input type="radio" name="correct-${q.id}" ${q.correct===j?'checked':''} onchange="builderQuestions[${i}].correct=${j}"><input type="text" placeholder="Option ${String.fromCharCode(65+j)}" value="${escapeHtml(o)}" oninput="builderQuestions[${i}].options[${j}]=this.value"></div>`).join('')}
       <div class="row" style="margin-top:6px;">
         <select onchange="builderQuestions[${i}].subject=this.value" style="font-size:12px;">
-          ${['Biology','Physics','Chemistry'].map(s=>`<option ${q.subject===s?'selected':''}>${s}</option>`).join('')}
+          ${['Physics','Chemistry','Botany','Zoology'].map(s=>`<option ${q.subject===s?'selected':''}>${s}</option>`).join('')}
         </select>
         <button class="btn danger small" onclick="removeBuilderQ(${i})">Remove Question</button>
       </div>
@@ -1905,7 +2040,7 @@ async function askDoubt(){
   if(!q){alert('Pehle apna doubt likho.');return;}
   const box=document.getElementById('doubtAnswer');
   box.innerHTML='<div class="ai-box">🤖 Soch rahi hai...</div>';
-  const sys="You are a warm, encouraging NEET tutor (Biology/Physics/Chemistry). Answer the student's doubt clearly in simple Hinglish, step by step if needed. Keep it focused and under 200 words.";
+  const sys="You are a warm, encouraging NEET tutor (Physics/Chemistry/Botany/Zoology). Answer the student's doubt clearly in simple Hinglish, step by step if needed. Keep it focused and under 200 words.";
   const {ok,text:ans,reason}=await askAI(q,sys);
   if(!ok){
     box.innerHTML=reason==='no-key'
@@ -2186,7 +2321,7 @@ function setupRealtimeSync(){
 function refreshCurrentView(key){
   const activeId=document.querySelector('.view.active') ? document.querySelector('.view.active').id : 'home';
   if(activeId==='home')updateHomeStats();
-  else if(activeId==='timetable')renderSlots();
+  else if(activeId==='timetable'){renderSlots();renderStudyLog();}
   else if(activeId==='syllabus')renderChapters();
   else if(activeId==='dpp')renderDppList();
   else if(activeId==='notes')renderNotesList();
