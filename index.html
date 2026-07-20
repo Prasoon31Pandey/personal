@@ -11,18 +11,30 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
 :root{
-  --bg:#fff7f8; --bg-card:#ffffff; --blush:#ffe3ea; --blush-deep:#ffc9d7;
+  --bg:#fff7f8; --bg-card:rgba(255,255,255,.74); --blush:#ffe3ea; --blush-deep:#ffc9d7;
   --wine:#a52c53; --wine-dark:#6d1c38; --gold:#cf9b45; --text:#3a1f2b; --text-soft:#8d6572;
   --line:#f3d9e0; --good:#4a9d6f; --shadow:0 10px 30px rgba(165,44,83,.10);
 }
 body[data-theme="dark"]{
-  --bg:#180f16; --bg-card:#241521; --blush:#3a2233; --blush-deep:#4e2b42;
+  --bg:#180f16; --bg-card:rgba(36,21,33,.66); --blush:#3a2233; --blush-deep:#4e2b42;
   --wine:#ec6f9a; --wine-dark:#ffc2da; --gold:#f0c583; --text:#f8ecf2; --text-soft:#d9a8c0;
   --line:#432a3d; --good:#6fcf97; --shadow:0 10px 34px rgba(0,0,0,.5);
 }
 *{box-sizing:border-box;}
 body{margin:0;background:var(--bg);background-image:linear-gradient(120deg,var(--bg),var(--blush) 40%,var(--bg) 70%,var(--blush-deep) 100%);background-size:300% 300%;animation:dynamicBg 22s ease infinite;color:var(--text);font-family:'Poppins',sans-serif;transition:background-color .4s,color .4s;}
 @keyframes dynamicBg{0%{background-position:0% 50%;}50%{background-position:100% 50%;}100%{background-position:0% 50%;}}
+
+#appOrbs{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:0;}
+.app-orb{position:absolute;border-radius:50%;filter:blur(70px);opacity:.28;animation:orb-drift 16s ease-in-out infinite;}
+.app-orb.a1{width:300px;height:300px;background:var(--wine);top:-60px;left:-60px;}
+.app-orb.a2{width:260px;height:260px;background:var(--gold);top:40%;right:-80px;animation-delay:3s;}
+.app-orb.a3{width:240px;height:240px;background:var(--wine);bottom:-70px;left:30%;animation-delay:6s;}
+
+.card,.file-item,.chapter-row,.timeslot-row,.test-card,.uploader,.add-form,.video-wrap,
+.habit-card,.streak-num,.badge,.journal-entry,.gallery-item,.note-item,.mistake-item,
+.modal,.q-live,.dash-card,.login-box,.wall-note,.result-card,.pomo,.love-meter{
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+}
 .story-badge{display:inline-flex;align-items:center;gap:6px;background:var(--wine-dark);color:#fff;padding:6px 14px;border-radius:999px;font-size:11.5px;font-weight:700;letter-spacing:.5px;margin-bottom:12px;box-shadow:var(--shadow);animation:storyPulse 2.6s ease-in-out infinite;}
 @keyframes storyPulse{0%,100%{transform:scale(1);}50%{transform:scale(1.04);}}
 h1,h2,h3,.display{font-family:'Playfair Display',serif;}
@@ -33,17 +45,33 @@ body.logged-in nav,body.logged-in section.view.active{display:block;}
 body.logged-in nav{display:block;}
 
 /* ---------- login gate ---------- */
-#loginGate{position:fixed;inset:0;background:linear-gradient(160deg,var(--bg),var(--blush));display:flex;align-items:center;justify-content:center;z-index:100;padding:20px;}
+#loginGate{position:fixed;inset:0;background:linear-gradient(160deg,#2a0f1e,#3d1530 45%,#1a0d16);display:flex;align-items:center;justify-content:center;z-index:100;padding:20px;overflow:hidden;}
 body.logged-in #loginGate{display:none;}
-.login-box{background:var(--bg-card);border-radius:24px;padding:44px;max-width:520px;width:100%;box-shadow:0 20px 60px rgba(165,44,83,.18);text-align:center;animation:rise .5s ease both;}
-.login-box .dot-brand{font-family:'Playfair Display',serif;font-size:28px;color:var(--wine-dark);font-weight:700;margin-bottom:6px;}
-.login-box p{color:var(--text-soft);font-size:13.5px;margin-bottom:26px;}
+.login-orb{position:absolute;border-radius:50%;filter:blur(60px);opacity:.45;animation:orb-drift 12s ease-in-out infinite;}
+.login-orb.o1{width:340px;height:340px;background:var(--wine);top:-80px;left:-80px;animation-delay:0s;}
+.login-orb.o2{width:280px;height:280px;background:var(--gold);bottom:-60px;right:-60px;animation-delay:2s;}
+.login-orb.o3{width:220px;height:220px;background:#8e3b6f;top:40%;right:10%;animation-delay:4s;}
+@keyframes orb-drift{0%,100%{transform:translate(0,0) scale(1);}50%{transform:translate(30px,-20px) scale(1.15);}}
+#loginEcg{position:absolute;bottom:8%;left:0;width:100%;height:90px;opacity:.35;}
+#loginEcg path{fill:none;stroke:var(--wine-dark);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1200;stroke-dashoffset:1200;animation:ecg-draw 4.5s linear infinite;}
+@keyframes ecg-draw{0%{stroke-dashoffset:1200;}100%{stroke-dashoffset:-1200;}}
+#loginDna{position:absolute;right:6%;top:50%;transform:translateY(-50%);width:120px;height:340px;opacity:.5;animation:dna-spin 8s linear infinite;}
+@keyframes dna-spin{0%{transform:translateY(-50%) rotateY(0deg);}100%{transform:translateY(-50%) rotateY(360deg);}}
+#loginMedIcons{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:0;}
+.med-icon{position:absolute;bottom:-40px;font-size:22px;opacity:0;animation:med-float 11s linear infinite;filter:drop-shadow(0 0 6px rgba(255,255,255,.25));}
+@keyframes med-float{0%{transform:translateY(0) rotate(0deg);opacity:0;}12%{opacity:.5;}100%{transform:translateY(-105vh) rotate(340deg);opacity:0;}}
+.login-box{position:relative;z-index:2;background:rgba(255,255,255,.06);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.18);border-radius:26px;padding:46px;max-width:520px;width:100%;box-shadow:0 25px 70px rgba(0,0,0,.45),0 0 0 1px rgba(255,255,255,.05) inset;text-align:center;animation:login-rise .7s cubic-bezier(.2,.9,.3,1.2) both;}
+@keyframes login-rise{from{opacity:0;transform:translateY(26px) scale(.96);}to{opacity:1;transform:translateY(0) scale(1);}}
+.login-box .dot-brand{font-family:'Playfair Display',serif;font-size:32px;color:#fff;font-weight:700;margin-bottom:6px;text-shadow:0 2px 20px rgba(233,140,180,.5);}
+.login-box p{color:rgba(255,255,255,.65);font-size:13.5px;margin-bottom:26px;}
 .role-cards{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;}
-.role-card{flex:1;min-width:190px;border:2px solid var(--line);border-radius:18px;padding:22px 16px;cursor:pointer;transition:.25s;background:var(--bg);}
-.role-card:hover{border-color:var(--wine);transform:translateY(-3px);box-shadow:var(--shadow);}
-.role-card .emoji{font-size:34px;margin-bottom:8px;}
-.role-card h3{margin:4px 0;font-size:15.5px;color:var(--wine-dark);}
-.role-card span{font-size:11.5px;color:var(--text-soft);}
+.role-card{flex:1;min-width:190px;border:1px solid rgba(255,255,255,.16);border-radius:18px;padding:22px 16px;cursor:pointer;transition:.3s;background:rgba(255,255,255,.04);position:relative;overflow:hidden;}
+.role-card::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 0%,rgba(236,111,154,.25),transparent 70%);opacity:0;transition:.3s;}
+.role-card:hover::before{opacity:1;}
+.role-card:hover{border-color:var(--wine);transform:translateY(-4px);box-shadow:0 14px 34px rgba(236,111,154,.25);}
+.role-card .emoji{font-size:36px;margin-bottom:8px;filter:drop-shadow(0 4px 10px rgba(0,0,0,.3));}
+.role-card h3{margin:4px 0;font-size:15.5px;color:#fff;}
+.role-card span{font-size:11.5px;color:rgba(255,255,255,.55);}
 
 #hearts{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:0;}
 .heart{position:absolute;bottom:-40px;font-size:18px;color:var(--blush-deep);opacity:.55;animation:float 14s linear infinite;}
@@ -54,8 +82,8 @@ body.logged-in #loginGate{display:none;}
 .pulse-divider path{fill:none;stroke:var(--wine);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:400;stroke-dashoffset:400;animation:draw 2.6s ease-out forwards infinite;}
 @keyframes draw{0%{stroke-dashoffset:400;}60%{stroke-dashoffset:0;}100%{stroke-dashoffset:-400;}}
 
-nav{position:sticky;top:0;z-index:30;background:rgba(255,247,248,.88);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);}
-body[data-theme="dark"] nav{background:rgba(27,16,20,.88);}
+nav{position:sticky;top:0;z-index:30;background:rgba(255,247,248,.75);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-bottom:1px solid var(--line);}
+body[data-theme="dark"] nav{background:rgba(24,15,22,.72);}
 .navrow{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;max-width:1120px;margin:0 auto;gap:12px;flex-wrap:wrap;}
 .brand{display:flex;align-items:center;gap:10px;font-family:'Playfair Display',serif;font-weight:700;font-size:20px;color:var(--wine-dark);}
 .brand .dot{width:9px;height:9px;border-radius:50%;background:var(--wine);box-shadow:0 0 0 4px var(--blush);}
@@ -66,7 +94,7 @@ body[data-theme="dark"] nav{background:rgba(27,16,20,.88);}
 .nav-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 .clock-widget{font-size:11.5px;color:var(--text-soft);background:var(--blush);padding:6px 11px;border-radius:999px;font-weight:600;min-width:140px;text-align:center;}
 .icon-btn{border:1px solid var(--line);background:var(--bg-card);width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:.2s;}
-.icon-btn:hover{transform:scale(1.08);border-color:var(--wine);}
+.icon-btn:hover{transform:scale(1.08) rotate(-8deg);border-color:var(--wine);}
 .role-badge{border:1px solid var(--wine);color:var(--wine);padding:6px 12px;border-radius:999px;font-size:11.5px;font-weight:700;}
 .mode-btn{border:1px solid var(--line);background:transparent;color:var(--text-soft);padding:6px 12px;border-radius:999px;font-size:11.5px;font-weight:600;cursor:pointer;transition:.2s;}
 .mode-btn:hover{background:var(--blush);}
@@ -88,14 +116,27 @@ section.view{padding:30px 0 70px;position:relative;z-index:1;animation:rise .5s 
 .cbox b{font-size:22px;color:var(--wine);display:block;font-family:'Playfair Display',serif;}
 .cbox span{font-size:10px;color:var(--text-soft);text-transform:uppercase;letter-spacing:1px;}
 
-.illustration-holder{display:flex;justify-content:center;}
+.illustration-holder{display:flex;justify-content:center;position:relative;}
 .doctor-figure{width:250px;animation:bob 4.5s ease-in-out infinite;}
 @keyframes bob{0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);}}
 .heart-pop{transform-origin:center;animation:pop 1.6s ease-in-out infinite;}
 @keyframes pop{0%,100%{transform:scale(1);}50%{transform:scale(1.18);}}
-.photo-frame{width:260px;background:var(--bg-card);border:8px solid #fff;border-radius:18px;box-shadow:0 14px 40px rgba(165,44,83,.20);overflow:hidden;animation:bob 4.5s ease-in-out infinite;}
+.photo-frame-wrap{position:relative;display:inline-block;}
+.photo-frame-wrap::before{
+  content:'';position:absolute;inset:-10px;border-radius:24px;z-index:-1;
+  background:conic-gradient(from 0deg,var(--wine),var(--gold),var(--wine-dark),var(--wine));
+  filter:blur(14px);opacity:.65;animation:ring-spin 6s linear infinite;
+}
+@keyframes ring-spin{to{transform:rotate(360deg);}}
+.photo-frame{width:260px;background:var(--bg-card);border:8px solid #fff;border-radius:18px;box-shadow:0 14px 40px rgba(165,44,83,.25);overflow:hidden;animation:bob 4.5s ease-in-out infinite;position:relative;}
 body[data-theme="dark"] .photo-frame{border-color:var(--bg-card);}
 .photo-frame img{width:100%;display:block;border-radius:10px;}
+.sparkle{position:absolute;font-size:16px;animation:sparkle-twinkle 2.4s ease-in-out infinite;pointer-events:none;}
+.sp1{top:-6px;right:30%;animation-delay:0s;}
+.sp2{bottom:20%;left:-12px;animation-delay:.7s;font-size:12px;}
+.sp3{top:35%;right:-14px;animation-delay:1.3s;font-size:13px;}
+.sp4{bottom:-8px;right:20%;animation-delay:1.9s;font-size:14px;}
+@keyframes sparkle-twinkle{0%,100%{opacity:0;transform:scale(.4) rotate(0deg);}50%{opacity:1;transform:scale(1.2) rotate(20deg);}}
 .butterfly-deco{position:absolute;font-size:22px;animation:flutter 3.4s ease-in-out infinite;pointer-events:none;}
 .bd1{top:-14px;left:-18px;animation-delay:.2s;}
 .bd2{top:20px;right:-22px;animation-delay:.9s;font-size:16px;}
@@ -103,12 +144,22 @@ body[data-theme="dark"] .photo-frame{border-color:var(--bg-card);}
 @keyframes flutter{0%,100%{transform:translateY(0) rotate(-6deg);}50%{transform:translateY(-10px) rotate(8deg);}}
 
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px;margin-top:10px;}
+.grid .card{animation:rise .5s ease both;}
+.grid .card:nth-child(1){animation-delay:.05s;}
+.grid .card:nth-child(2){animation-delay:.12s;}
+.grid .card:nth-child(3){animation-delay:.19s;}
+.grid .card:nth-child(4){animation-delay:.26s;}
 .card{background:var(--bg-card);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:var(--shadow);transition:.25s;}
 .card:hover{transform:translateY(-3px);}
 .card h3{margin:0 0 6px;font-size:14.5px;color:var(--wine-dark);}
 .card p{color:var(--text-soft);font-size:12px;margin:0 0 12px;}
-.progress-track{height:9px;background:var(--blush);border-radius:99px;overflow:hidden;}
-.progress-fill{height:100%;background:linear-gradient(90deg,var(--wine),var(--gold));border-radius:99px;transition:width 1s ease;}
+.progress-track{height:9px;background:var(--blush);border-radius:99px;overflow:hidden;position:relative;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--wine),var(--gold));border-radius:99px;transition:width 1s ease;position:relative;overflow:hidden;}
+.progress-fill::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.45),transparent);animation:shimmer 2.2s ease-in-out infinite;}
+@keyframes shimmer{0%{transform:translateX(-100%);}100%{transform:translateX(100%);}}
+.btn,.cta,.icon-btn,.tab-btn,.check-round,.mood-btn,.subj-btn,.cat-btn{transition:transform .15s ease,background .2s ease,box-shadow .2s ease;}
+.btn:active,.cta:active,.icon-btn:active{transform:scale(.93);}
+.tab-btn:active{transform:scale(.95);}
 
 .love-meter{background:var(--bg-card);border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:var(--shadow);margin-top:18px;}
 .love-meter h3{margin:0 0 4px;color:var(--wine-dark);font-size:15px;}
@@ -230,6 +281,13 @@ input[type=file]{font-size:12.5px;color:var(--text-soft);}
 .mistake-item .lbl{font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--gold);font-weight:700;margin-top:6px;}
 
 #confettiLayer{position:fixed;inset:0;pointer-events:none;z-index:80;}
+#loveBurstLayer{position:fixed;inset:0;pointer-events:none;z-index:130;overflow:hidden;}
+.love-bit{position:absolute;font-weight:700;color:var(--wine);font-family:'Playfair Display',serif;white-space:nowrap;animation:love-float 2.6s ease-out forwards;}
+@keyframes love-float{
+  0%{transform:translateY(0) scale(.4) rotate(0deg);opacity:0;}
+  15%{opacity:1;transform:translateY(-10px) scale(1.1) rotate(-4deg);}
+  100%{transform:translateY(-260px) scale(1) rotate(4deg);opacity:0;}
+}
 .confetti-bit{position:absolute;font-size:16px;animation:confetti-fall 1.2s ease-out forwards;}
 @keyframes confetti-fall{0%{transform:translateY(0) rotate(0);opacity:1;}100%{transform:translateY(220px) rotate(360deg);opacity:0;}}
 
@@ -282,6 +340,24 @@ footer{text-align:center;padding:28px 0;color:var(--text-soft);font-size:12px;}
 
 <!-- ================= LOGIN GATE ================= -->
 <div id="loginGate">
+  <div class="login-orb o1"></div>
+  <div class="login-orb o2"></div>
+  <div class="login-orb o3"></div>
+  <div id="loginMedIcons"></div>
+  <svg id="loginEcg" viewBox="0 0 1200 90" preserveAspectRatio="none">
+    <path d="M0 45 L280 45 L310 10 L340 80 L365 45 L400 45 L1200 45"/>
+  </svg>
+  <svg id="loginDna" viewBox="0 0 120 340" xmlns="http://www.w3.org/2000/svg">
+    <g stroke="#fff" stroke-width="2" opacity=".8">
+      <path d="M10 0 Q60 21 110 42 Q60 63 10 84 Q60 105 110 126 Q60 147 10 168 Q60 189 110 210 Q60 231 10 252 Q60 273 110 294 Q60 315 10 336" fill="none"/>
+      <path d="M110 0 Q60 21 10 42 Q60 63 110 84 Q60 105 10 126 Q60 147 110 168 Q60 189 10 210 Q60 231 110 252 Q60 273 10 294 Q60 315 110 336" fill="none"/>
+    </g>
+    <g stroke="#f0c583" stroke-width="1.4" opacity=".6">
+      <line x1="10" y1="0" x2="110" y2="0"/><line x1="10" y1="42" x2="110" y2="42"/><line x1="10" y1="84" x2="110" y2="84"/>
+      <line x1="10" y1="126" x2="110" y2="126"/><line x1="10" y1="168" x2="110" y2="168"/><line x1="10" y1="210" x2="110" y2="210"/>
+      <line x1="10" y1="252" x2="110" y2="252"/><line x1="10" y1="294" x2="110" y2="294"/><line x1="10" y1="336" x2="110" y2="336"/>
+    </g>
+  </svg>
   <div class="login-box">
     <div class="dot-brand">🩺 Dr. Sakshi</div>
     <p>Login karo apne role se — dono ka view alag hai.</p>
@@ -300,6 +376,11 @@ footer{text-align:center;padding:28px 0;color:var(--text-soft);font-size:12px;}
   </div>
 </div>
 
+<div id="appOrbs">
+  <div class="app-orb a1"></div>
+  <div class="app-orb a2"></div>
+  <div class="app-orb a3"></div>
+</div>
 <div id="hearts"></div>
 <div id="confettiLayer"></div>
 
@@ -346,7 +427,9 @@ footer{text-align:center;padding:28px 0;color:var(--text-soft);font-size:12px;}
       <div class="illustration-holder">
         <div style="position:relative;">
           <span class="butterfly-deco bd1">🦋</span><span class="butterfly-deco bd2">🦋</span><span class="butterfly-deco bd3">🦋</span>
-          <div class="photo-frame" id="photoFrame">
+          <div class="photo-frame-wrap">
+            <span class="sparkle sp1">✨</span><span class="sparkle sp2">✨</span><span class="sparkle sp3">✨</span><span class="sparkle sp4">✨</span>
+            <div class="photo-frame" id="photoFrame">
             <svg class="doctor-figure" viewBox="0 0 260 320" xmlns="http://www.w3.org/2000/svg">
               <ellipse cx="130" cy="300" rx="90" ry="14" fill="#ffc9d7" opacity=".5"/>
               <path d="M70 140 Q65 250 80 300 L180 300 Q195 250 190 140 Z" fill="#ffffff" stroke="#e9c3ce" stroke-width="2"/>
@@ -363,6 +446,7 @@ footer{text-align:center;padding:28px 0;color:var(--text-soft);font-size:12px;}
               <circle cx="245" cy="70" r="13" class="heart-pop" fill="#a52c53"/>
               <text x="238" y="75" font-size="13" fill="#fff">❤</text>
             </svg>
+            </div>
           </div>
           <p id="photoCaption" style="text-align:center;color:var(--text-soft);font-size:11.5px;margin-top:8px;"></p>
           <div class="row admin-only" style="justify-content:center;margin-top:8px;">
@@ -445,10 +529,13 @@ footer{text-align:center;padding:28px 0;color:var(--text-soft);font-size:12px;}
       <span id="timetableDateLabel" style="font-weight:600;color:var(--wine-dark);"></span>
     </div>
 
+    <div class="subject-tabs" id="ttSubjFilterTabs"></div>
+
     <h3 style="color:var(--wine-dark);">✅ Must-Do Tasks</h3>
     <p style="color:var(--text-soft);font-size:12.5px;">Is date ke liye chhoti, zaroori list — "bas ye kar ke sona hai".</p>
     <div class="row" style="margin-bottom:14px;">
       <input type="text" id="mustDoInput" placeholder="e.g. Physics ka 1 chapter revise karna hai" style="min-width:260px;">
+      <select id="mustDoSubject"><option value="General">General</option><option>Physics</option><option>Organic Chemistry</option><option>Inorganic Chemistry</option><option>Physical Chemistry</option><option>Botany</option><option>Zoology</option></select>
       <button class="btn" onclick="addMustDo()">+ Add Task</button>
     </div>
     <div id="mustDoList" style="margin-bottom:26px;"></div>
@@ -796,8 +883,27 @@ footer{text-align:center;padding:28px 0;color:var(--text-soft);font-size:12px;}
       <p style="font-size:11.5px;color:var(--text-soft);margin-top:6px;">Aaj ki date daalo to abhi dikhega, future date daalo to wo tab tak 🎁 locked rahega.</p>
     </div>
     <div class="wall-grid" id="loveWallGrid"></div>
+
+    <h3 style="color:var(--wine-dark);margin-top:28px;">📣 Big Reminder Popup</h3>
+    <p style="color:var(--text-soft);font-size:12.5px;">Jab wo app kholegi, ye bada popup dikhega — jaise "Babe, pehle Meet join karo phir padhai" — OK dabate hi pyaara surprise milega.</p>
+    <div class="add-form admin-only" style="margin-bottom:16px;">
+      <div class="row" style="margin-bottom:8px;">
+        <input type="text" id="bigReminderInput" placeholder="e.g. Babe, pehle Google Meet join karo, phir padhai shuru karo 💕" style="width:100%;">
+      </div>
+      <button class="btn" onclick="sendBigReminder()">📣 Send Reminder</button>
+      <div id="bigReminderStatus"></div>
+    </div>
   </div>
 </section>
+
+<div class="modal-bg" id="reminderBg" style="z-index:120;">
+  <div class="modal" id="reminderModal" style="text-align:center;max-width:480px;">
+    <div style="font-size:44px;">💌</div>
+    <p id="reminderText" style="font-size:17px;font-weight:600;color:var(--wine-dark);margin:14px 0 24px;line-height:1.5;"></p>
+    <button class="cta" onclick="dismissBigReminder()">OK 💕</button>
+  </div>
+</div>
+<div id="loveBurstLayer"></div>
 
 <div class="modal-bg" id="modalBg"><div class="modal"><button class="close-x" onclick="closeModal()">✕</button><div id="modalBody"></div></div></div>
 <footer>Made with 🩷 for Dr. Sakshi's NEET journey.</footer>
@@ -952,8 +1058,21 @@ async function clearAiSettings(){
 
 /* ================= AMBIENT HEARTS + CONFETTI ================= */
 const heartsWrap=document.getElementById('hearts');
-const ambientSymbols=['❤','❤','❤','🦋','🦋'];
+const ambientSymbols=['❤','❤','❤','🦋','🦋','🩺','🧬'];
 for(let i=0;i<16;i++){const h=document.createElement('div');h.className='heart';h.textContent=ambientSymbols[i%ambientSymbols.length];h.style.left=Math.random()*100+'%';h.style.animationDelay=(Math.random()*14)+'s';h.style.fontSize=(12+Math.random()*14)+'px';heartsWrap.appendChild(h);}
+const medIconsWrap=document.getElementById('loginMedIcons');
+if(medIconsWrap){
+  const medSymbols=['🩺','💊','🧬','➕','❤️','🩹'];
+  for(let i=0;i<18;i++){
+    const m=document.createElement('div');
+    m.className='med-icon';
+    m.textContent=medSymbols[i%medSymbols.length];
+    m.style.left=Math.random()*100+'%';
+    m.style.animationDelay=(Math.random()*11)+'s';
+    m.style.fontSize=(16+Math.random()*16)+'px';
+    medIconsWrap.appendChild(m);
+  }
+}
 function burstConfetti(x,y){
   const layer=document.getElementById('confettiLayer');
   const bits=['🎉','💖','✨','🌸','💗'];
@@ -983,8 +1102,75 @@ function enterApp(role){
   document.getElementById('roleBadge').textContent=role==='admin'?'👨‍⚕️ Admin':'👩‍⚕️ Sakshi';
   switchTab('home');
   logActivity();
+  checkBigReminder();
+  if(role==='student')speakGreeting("Hello babe! Best of luck for your career, Dr. Sakshi. I'm so proud of you.");
+}
+function speakGreeting(text){
+  if(!('speechSynthesis' in window))return;
+  const doSpeak=()=>{
+    try{
+      speechSynthesis.cancel();
+      const utter=new SpeechSynthesisUtterance(text);
+      utter.rate=0.95;utter.pitch=1.15;utter.volume=1;
+      const voices=speechSynthesis.getVoices();
+      const preferred=voices.find(v=>/female|zira|samantha|susan|google uk english female/i.test(v.name));
+      if(preferred)utter.voice=preferred;
+      speechSynthesis.speak(utter);
+    }catch(e){console.error('voice greeting failed',e);}
+  };
+  if(speechSynthesis.getVoices().length===0){
+    speechSynthesis.addEventListener('voiceschanged',doSpeak,{once:true});
+  }else{doSpeak();}
 }
 function logout(){clearRoleLocal();document.body.classList.remove('logged-in','student-mode');}
+
+/* ================= BIG REMINDER POPUP ================= */
+async function sendBigReminder(){
+  const text=document.getElementById('bigReminderInput').value.trim();
+  if(!text){alert('Reminder message likho pehle.');return;}
+  await sSet('reminder:big',{id:uid(),text,active:true,ts:Date.now()});
+  document.getElementById('bigReminderInput').value='';
+  alert('✅ Reminder ON kar diya — jab bhi wo app kholegi, ye dikhega, jab tak tum band na karo.');
+  renderBigReminderStatus();
+}
+async function checkBigReminder(){
+  const r=await sGet('reminder:big',null);
+  if(!r || !r.active)return;
+  document.getElementById('reminderText').textContent=r.text;
+  document.getElementById('reminderBg').classList.add('show');
+}
+function dismissBigReminder(){
+  document.getElementById('reminderBg').classList.remove('show');
+  loveBurst();
+}
+async function clearBigReminder(){
+  await sSet('reminder:big',null);
+  renderBigReminderStatus();
+}
+async function renderBigReminderStatus(){
+  const r=await sGet('reminder:big',null);
+  const box=document.getElementById('bigReminderStatus');
+  if(!box)return;
+  box.innerHTML=(r && r.active)
+    ? `<div class="card" style="margin-top:10px;"><b>Active:</b> ${escapeHtml(r.text)} <button class="btn danger small" style="margin-left:10px;" onclick="clearBigReminder()">🗑 Turn Off</button></div>`
+    : '';
+}
+function loveBurst(){
+  const layer=document.getElementById('loveBurstLayer');
+  const words=['I Love You 💕','❤️','Proud of you 💗','I Love You 💕','✨💖✨'];
+  for(let i=0;i<14;i++){
+    setTimeout(()=>{
+      const el=document.createElement('div');
+      el.className='love-bit';
+      el.textContent=words[Math.floor(Math.random()*words.length)];
+      el.style.left=(10+Math.random()*80)+'%';
+      el.style.bottom=(Math.random()*30)+'px';
+      el.style.fontSize=(16+Math.random()*16)+'px';
+      layer.appendChild(el);
+      setTimeout(()=>el.remove(),2700);
+    },i*140);
+  }
+}
 
 function initAuth(){
   const role=getRole();
@@ -1001,7 +1187,7 @@ function switchTab(id){
   if(id==='progress')renderProgressPage();
   if(id==='syllabus'){populateLogChapterSel();renderStudyLog();}
   if(id==='us')renderUsPage();
-  if(id==='timetable'){if(!selectedTimetableDate)initTimetableDate();renderSlots();renderMustDo();}
+  if(id==='timetable'){if(!selectedTimetableDate)initTimetableDate();renderTtSubjFilterTabs();renderSlots();renderMustDo();}
   if(id==='ncert'){renderNcertSubjTabs();renderNcertBooks();renderReadingLog();populateReadBookSel();}
 }
 document.querySelectorAll('.tab-btn').forEach(b=>b.addEventListener('click',()=>switchTab(b.dataset.tab)));
@@ -1093,13 +1279,22 @@ function computeStreak(log){
   return streak;
 }
 
+/* ================= TIMETABLE SUBJECT FILTER ================= */
+let ttSubjectFilter='All';
+function renderTtSubjFilterTabs(){
+  const opts=['All',...SUBJECTS];
+  document.getElementById('ttSubjFilterTabs').innerHTML=opts.map(s=>`<button class="subj-btn ${s===ttSubjectFilter?'active':''}" onclick="setTtSubjFilter('${s}')">${s}</button>`).join('');
+}
+function setTtSubjFilter(s){ttSubjectFilter=s;renderTtSubjFilterTabs();renderMustDo();renderSlots();}
+
 /* ================= MUST-DO TODAY CHECKLIST ================= */
 async function addMustDo(){
   const text=document.getElementById('mustDoInput').value.trim();
+  const subject=document.getElementById('mustDoSubject').value;
   if(!text){alert('Task likho pehle.');return;}
   const key='mustdo:'+selectedTimetableDate;
   const list=await sGet(key,[]);
-  list.push({id:uid(),text,done:false});
+  list.push({id:uid(),text,subject,done:false});
   await sSet(key,list);
   document.getElementById('mustDoInput').value='';
   await logActivity();
@@ -1107,13 +1302,15 @@ async function addMustDo(){
 }
 async function renderMustDo(){
   const key='mustdo:'+selectedTimetableDate;
-  const list=await sGet(key,[]);
+  const all=await sGet(key,[]);
+  const list=ttSubjectFilter==='All'?all:all.filter(t=>(t.subject||'General')===ttSubjectFilter);
   const wrap=document.getElementById('mustDoList');
   const isToday=selectedTimetableDate===todayStr();
-  if(!list.length){wrap.innerHTML=`<div class="empty-state">${isToday?'Aaj':'Is date'} ke liye koi must-do task add nahi hua.</div>`;return;}
+  if(!list.length){wrap.innerHTML=`<div class="empty-state">${isToday?'Aaj':'Is date'} ke liye${ttSubjectFilter!=='All'?' ('+ttSubjectFilter+')':''} koi must-do task add nahi hua.</div>`;return;}
   wrap.innerHTML=list.map(t=>`
     <div class="timeslot-row ${t.done?'done':''}">
       <button class="check-round ${t.done?'on':''}" onclick="toggleMustDo('${t.id}',event)">${t.done?'✓':''}</button>
+      ${t.subject?`<span class="tag">${escapeHtml(t.subject)}</span>`:''}
       <div style="flex:1;min-width:140px;" class="${t.done?'chapter-name done':'chapter-name'}">${escapeHtml(t.text)}</div>
       <button class="btn danger small admin-only" onclick="deleteMustDo('${t.id}')">🗑</button>
     </div>`).join('');
@@ -1174,9 +1371,10 @@ async function addSlot(){
 }
 async function renderSlots(){
   const key='timetable:'+selectedTimetableDate;
-  const list=await sGet(key,[]);
+  const all=await sGet(key,[]);
+  const list=ttSubjectFilter==='All'?all:all.filter(s=>s.subject===ttSubjectFilter);
   const wrap=document.getElementById('slotList');
-  if(!list.length){wrap.innerHTML='<div class="empty-state">Is date ke liye koi slot add nahi hua abhi.</div>';return;}
+  if(!list.length){wrap.innerHTML=`<div class="empty-state">Is date ke liye${ttSubjectFilter!=='All'?' ('+ttSubjectFilter+')':''} koi slot add nahi hua abhi.</div>`;return;}
   wrap.innerHTML=list.map(s=>`
     <div class="timeslot-row ${s.done?'done':''}">
       <button class="check-round ${s.done?'on':''}" onclick="toggleSlot('${s.id}',event)">${s.done?'✓':''}</button>
@@ -1258,11 +1456,26 @@ async function addChapter(){
   const targetLectures=parseInt(document.getElementById('chapterTargetLectures').value)||0;
   if(!name){alert('Chapter ka naam likho.');return;}
   const list=await sGet('syllabus:'+activeSubject,[]);
-  list.push({id:uid(),name,ncert:false,notesDone:false,revised:false,complete:false,targetLectures});
+  const newChapter={id:uid(),name,ncert:false,notesDone:false,revised:false,complete:false,targetLectures,createdDate:todayStr(),startedDate:null,completedDate:null};
+  list.push(newChapter);
   const ok=await sSet('syllabus:'+activeSubject,list);
   if(!ok){alert('Save fail ho gaya.');return;}
   document.getElementById('chapterName').value='';document.getElementById('chapterTargetLectures').value='';
+  await scheduleOralRevision(newChapter,activeSubject);
   renderChapters();populateLogChapterSel();updateHomeStats();
+}
+function daysBetween(d1,d2){
+  return Math.round((new Date(d2)-new Date(d1))/86400000);
+}
+async function scheduleOralRevision(chapter,subject){
+  const tomorrow=new Date();tomorrow.setDate(tomorrow.getDate()+1);tomorrow.setHours(10,0,0,0);
+  const tests=await sGet('tests:saved',[]);
+  tests.unshift({
+    id:uid(),name:`🗣️ Oral Revision — ${chapter.name}`,mins:10,subject,link:'',
+    schedule:tomorrow.toISOString(),locked:false,oral:true,chapterId:chapter.id,
+    questions:[],ts:Date.now()
+  });
+  await sSet('tests:saved',tests);
 }
 async function renderSubjSummary(){
   const list=await sGet('syllabus:'+activeSubject,[]);
@@ -1294,10 +1507,18 @@ async function renderChapters(){
     const lectureBadge=c.targetLectures
       ? `<span class="tag" style="background:${lecturesDone>=c.targetLectures?'var(--good)':'var(--blush)'};color:${lecturesDone>=c.targetLectures?'#fff':'var(--wine-dark)'};">🎥 ${lecturesDone}/${c.targetLectures}</span>`
       : (lecturesDone?`<span class="tag">🎥 ${lecturesDone} lectures</span>`:'');
+    let daysBadge='';
+    if(c.complete && c.completedDate){
+      const days=daysBetween(c.startedDate||c.createdDate||c.completedDate,c.completedDate);
+      daysBadge=`<span class="tag" style="background:var(--good);color:#fff;">📅 ${days<=0?'Same day':days+' din mein complete'}</span>`;
+    }else if(c.startedDate){
+      const days=daysBetween(c.startedDate,todayStr());
+      daysBadge=`<span class="tag">📅 ${days} din se chal raha hai</span>`;
+    }
     return `
     <div class="chapter-row ${c.complete?'complete':''}">
       <button class="check-round ${c.complete?'on':''}" onclick="toggleChapterComplete('${c.id}',event)">${c.complete?'✓':''}</button>
-      <div class="chapter-name ${c.complete?'done':''}">${escapeHtml(c.name)} ${c.current?'<span class="tag" style="background:var(--gold);color:#fff;">📖 Currently Studying</span>':''} ${lectureBadge}</div>
+      <div class="chapter-name ${c.complete?'done':''}">${escapeHtml(c.name)} ${c.current?'<span class="tag" style="background:var(--gold);color:#fff;">📖 Currently Studying</span>':''} ${lectureBadge} ${daysBadge}</div>
       <div class="mini-checks">
         <span class="mini-chip ${c.ncert?'on':''}" onclick="toggleChapterField('${c.id}','ncert')">NCERT</span>
         <span class="mini-chip ${c.notesDone?'on':''}" onclick="toggleChapterField('${c.id}','notesDone')">Notes</span>
@@ -1436,7 +1657,10 @@ async function deleteTopicLog(id,topicId){
 }
 async function setCurrentChapter(id){
   const list=await sGet('syllabus:'+activeSubject,[]);
-  list.forEach(c=>c.current=(c.id===id));
+  list.forEach(c=>{
+    c.current=(c.id===id);
+    if(c.id===id && !c.startedDate)c.startedDate=todayStr();
+  });
   await sSet('syllabus:'+activeSubject,list);
   await sSet('currentlyStudying',{subject:activeSubject,name:list.find(c=>c.id===id).name,ts:Date.now()});
   renderChapters();updateHomeStats();
@@ -1452,7 +1676,14 @@ async function toggleChapterComplete(id,ev){
   const list=await sGet('syllabus:'+activeSubject,[]);
   const c=list.find(x=>x.id===id); if(!c)return;
   c.complete=!c.complete;
-  if(c.complete){c.ncert=true;c.notesDone=true;c.revised=true;await logActivity();}
+  if(c.complete){
+    c.ncert=true;c.notesDone=true;c.revised=true;
+    c.completedDate=todayStr();
+    if(!c.startedDate)c.startedDate=c.createdDate||todayStr();
+    await logActivity();
+  }else{
+    c.completedDate=null;
+  }
   await sSet('syllabus:'+activeSubject,list);
   if(c.complete&&ev)burstConfetti(ev.clientX,ev.clientY);
   renderChapters();updateHomeStats();
@@ -2109,7 +2340,7 @@ async function renderTestList(){
     <div class="file-item">
       <div class="file-info">
         <b>${escapeHtml(t.name)}</b>
-        <span><span class="tag">${t.questions.length} Qs</span> <span class="tag">${t.subject||'Mixed'}</span> · ${t.mins} min ${t.link?`· <a href="${t.link}" target="_blank">Paper PDF ↗</a>`:''} ${t.locked?'<span class="tag" style="background:#c14a35;color:#fff;">🔒 Locked</span>':''} ${notYet?`<span class="tag" style="background:var(--gold);color:#fff;">⏰ Unlocks ${new Date(t.schedule).toLocaleString()}</span>`:''}</span>
+        <span><span class="tag">${t.oral?'🗣️ Oral':t.questions.length+' Qs'}</span> <span class="tag">${t.subject||'Mixed'}</span> · ${t.mins} min ${t.link?`· <a href="${t.link}" target="_blank">Paper PDF ↗</a>`:''} ${t.locked?'<span class="tag" style="background:#c14a35;color:#fff;">🔒 Locked</span>':''} ${notYet?`<span class="tag" style="background:var(--gold);color:#fff;">⏰ Unlocks ${new Date(t.schedule).toLocaleString()}</span>`:''}</span>
       </div>
       <div class="file-actions">
         <button class="btn small" onclick="startTest('${t.id}')" ${t.locked||notYet?'disabled':''}>▶ Start Test</button>
@@ -2128,7 +2359,42 @@ async function toggleLockTest(id){
 }
 async function deleteTest(id){const tests=await sGet('tests:saved',[]);await sSet('tests:saved',tests.filter(t=>t.id!==id));renderTestList();updateHomeStats();}
 
-/* ================= EXAM RUNNER ================= */
+/* ================= ORAL REVISION TEST ================= */
+function startOralTest(t){
+  document.getElementById('testBuilder').style.display='none';
+  const runner=document.getElementById('testRunner');
+  runner.style.display='block';
+  runner.innerHTML=`
+    <div class="test-card result-card">
+      <div style="font-size:44px;">🗣️</div>
+      <h3 style="margin:14px 0 4px;color:var(--wine-dark);">${escapeHtml(t.name)}</h3>
+      <p style="color:var(--text-soft);font-size:13.5px;">Chapter zor se bolke revise karo — jaise koi teacher pooch rahi ho. Jab confident ho jao, "Done" dabao.</p>
+      <div class="row" style="justify-content:center;margin-top:20px;">
+        <button class="cta" onclick="finishOralTest('${t.id}')">✅ Done — Mark Complete</button>
+        <button class="btn ghost" onclick="backToTests()">← Back</button>
+      </div>
+    </div>`;
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+async function finishOralTest(id){
+  const tests=await sGet('tests:saved',[]);
+  const t=tests.find(x=>x.id===id); if(!t)return;
+  const role=document.body.classList.contains('student-mode')?'Sakshi':'Admin';
+  const results=await sGet('tests:results',[]);
+  results.unshift({id:uid(),testId:t.id,testName:t.name,role,oral:true,score:1,total:1,ts:Date.now()});
+  await sSet('tests:results',results);
+  await logActivity();
+  updateHomeStats();
+  burstConfetti(window.innerWidth/2,150);
+  document.getElementById('testRunner').innerHTML=`
+    <div class="test-card result-card">
+      <div style="font-size:48px;">🎉</div>
+      <p style="color:var(--wine-dark);font-weight:600;margin-top:10px;">Oral revision complete — great job!</p>
+      <button class="btn ghost" onclick="backToTests()" style="margin-top:14px;">← Back to Tests</button>
+    </div>`;
+}
+
+
 let timerInterval=null,autosaveInterval=null;
 let examState=null; // {test, answers, marked, visited, index, secondsLeft, qStartTs, timePerQ}
 
@@ -2137,6 +2403,7 @@ async function startTest(id){
   const t=tests.find(x=>x.id===id); if(!t)return;
   if(t.locked){alert('Ye test admin ne lock kiya hua hai.');return;}
   if(t.schedule && new Date(t.schedule)>new Date()){alert('Ye test abhi unlock nahi hua — scheduled time ka wait karo.');return;}
+  if(t.oral){startOralTest(t);return;}
 
   const saved=await sGet('testProgress:'+id,null);
   let resume=false;
@@ -2643,6 +2910,7 @@ async function renderUsPage(){
   renderGallery();
   renderLoveNotes();
   renderHugs();
+  renderBigReminderStatus();
 }
 
 /* ================= REALTIME SYNC (no refresh needed) ================= */
