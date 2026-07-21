@@ -197,11 +197,14 @@ input[type=file]{font-size:12.5px;color:var(--text-soft);}
 .file-info b{font-size:13.5px;color:var(--text);}
 .file-info span{font-size:11px;color:var(--text-soft);}
 .tag{font-size:10px;padding:3px 9px;border-radius:99px;background:var(--blush);color:var(--wine-dark);font-weight:600;letter-spacing:.3px;}
+.status-tag-select{font-size:10.5px;padding:5px 10px;border-radius:99px;font-weight:700;letter-spacing:.3px;border:none;cursor:pointer;font-family:inherit;-webkit-appearance:none;appearance:none;}
+.status-tag-select:hover{filter:brightness(1.08);}
 .file-actions{display:flex;gap:6px;flex-wrap:wrap;}
 .empty-state{text-align:center;padding:36px 10px;color:var(--text-soft);}
 .answer-box{margin-top:8px;background:var(--blush);border-radius:10px;padding:10px 12px;font-size:12.5px;}
 .check-round{width:20px;height:20px;border-radius:50%;border:2px solid var(--wine);cursor:pointer;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;background:transparent;transition:.2s;}
 .check-round.on{background:var(--good);border-color:var(--good);}
+.check-round.half{background:linear-gradient(90deg,var(--gold) 50%,transparent 50%);border-color:var(--gold);color:var(--wine-dark);font-weight:700;}
 
 .modal-bg{position:fixed;inset:0;background:rgba(20,10,14,.55);display:none;align-items:center;justify-content:center;z-index:50;padding:20px;}
 .modal-bg.show{display:flex;}
@@ -532,10 +535,11 @@ footer{text-align:center;padding:28px 0;color:var(--text-soft);font-size:12px;}
     <div class="subject-tabs" id="ttSubjFilterTabs"></div>
 
     <h3 style="color:var(--wine-dark);">✅ Must-Do Tasks</h3>
-    <p style="color:var(--text-soft);font-size:12.5px;">Is date ke liye chhoti, zaroori list — "bas ye kar ke sona hai".</p>
+    <p style="color:var(--text-soft);font-size:12.5px;">Is date ke liye chhoti, zaroori list — "bas ye kar ke sona hai". Status ko click karke Pending → Half → Complete cycle karo.</p>
     <div class="row" style="margin-bottom:14px;">
-      <input type="text" id="mustDoInput" placeholder="e.g. Physics ka 1 chapter revise karna hai" style="min-width:260px;">
+      <input type="text" id="mustDoInput" placeholder="e.g. Motion in Straight Line" style="min-width:220px;">
       <select id="mustDoSubject"><option value="General">General</option><option>Physics</option><option>Organic Chemistry</option><option>Inorganic Chemistry</option><option>Physical Chemistry</option><option>Botany</option><option>Zoology</option></select>
+      <input type="text" id="mustDoLecture" placeholder="Lecture no. (optional, e.g. Lecture 3)" style="width:190px;">
       <button class="btn" onclick="addMustDo()">+ Add Task</button>
     </div>
     <div id="mustDoList" style="margin-bottom:26px;"></div>
@@ -560,6 +564,20 @@ footer{text-align:center;padding:28px 0;color:var(--text-soft);font-size:12px;}
 <section class="view" id="syllabus">
   <div class="wrap">
     <div class="section-title"><h2>Syllabus Tracker</h2><span class="pill-note">Chapter-wise progress</span></div>
+
+    <h3 style="color:#c14a35;">🔴 Backlog</h3>
+    <p style="color:var(--text-soft);font-size:12.5px;">Jo peeche reh gaya hai — yahan add karo taaki bhulein na.</p>
+    <div class="add-form" style="margin-bottom:16px;border-color:#c14a35;">
+      <div class="row" style="margin-bottom:8px;">
+        <input type="text" id="backlogText" placeholder="e.g. Physics Ch.3 DPP pending" style="min-width:240px;">
+        <select id="backlogSubject"><option value="General">General</option><option>Physics</option><option>Organic Chemistry</option><option>Inorganic Chemistry</option><option>Physical Chemistry</option><option>Botany</option><option>Zoology</option></select>
+        <button class="btn" style="background:#c14a35;" onclick="addBacklog()">+ Add Backlog</button>
+      </div>
+    </div>
+    <div id="backlogList" style="margin-bottom:26px;"></div>
+
+    <div class="pulse-divider"><svg viewBox="0 0 800 40" preserveAspectRatio="none"><path d="M0 20 L200 20 L225 3 L245 37 L268 20 L800 20"/></svg></div>
+
     <div class="subject-tabs" id="subjTabs"></div>
 
     <div class="card" style="margin-bottom:16px;" id="subjSummaryCard"></div>
@@ -1185,7 +1203,7 @@ function switchTab(id){
   const btn=document.querySelector(`.tab-btn[data-tab="${id}"]`); if(btn)btn.classList.add('active');
   window.scrollTo({top:0,behavior:'smooth'});
   if(id==='progress')renderProgressPage();
-  if(id==='syllabus'){populateLogChapterSel();renderStudyLog();}
+  if(id==='syllabus'){renderBacklog();populateLogChapterSel();renderStudyLog();}
   if(id==='us')renderUsPage();
   if(id==='timetable'){if(!selectedTimetableDate)initTimetableDate();renderTtSubjFilterTabs();renderSlots();renderMustDo();}
   if(id==='ncert'){renderNcertSubjTabs();renderNcertBooks();renderReadingLog();populateReadBookSel();}
@@ -1291,37 +1309,47 @@ function setTtSubjFilter(s){ttSubjectFilter=s;renderTtSubjFilterTabs();renderMus
 async function addMustDo(){
   const text=document.getElementById('mustDoInput').value.trim();
   const subject=document.getElementById('mustDoSubject').value;
+  const lecture=document.getElementById('mustDoLecture').value.trim();
   if(!text){alert('Task likho pehle.');return;}
   const key='mustdo:'+selectedTimetableDate;
   const list=await sGet(key,[]);
-  list.push({id:uid(),text,subject,done:false});
+  list.push({id:uid(),text,subject,lecture,status:'pending'});
   await sSet(key,list);
-  document.getElementById('mustDoInput').value='';
+  document.getElementById('mustDoInput').value='';document.getElementById('mustDoLecture').value='';
   await logActivity();
   renderMustDo();
 }
+const MUSTDO_STATUS_LABEL={pending:{icon:'',cls:'',emoji:'⏳',name:'Pending',tagBg:'var(--blush)',tagColor:'var(--wine-dark)'},half:{icon:'◐',cls:'half',emoji:'🌗',name:'Ongoing',tagBg:'var(--gold)',tagColor:'#fff'},complete:{icon:'✓',cls:'on',emoji:'✅',name:'Complete',tagBg:'var(--good)',tagColor:'#fff'}};
 async function renderMustDo(){
   const key='mustdo:'+selectedTimetableDate;
   const all=await sGet(key,[]);
+  all.forEach(t=>{if(!t.status)t.status=t.done?'complete':'pending';});
   const list=ttSubjectFilter==='All'?all:all.filter(t=>(t.subject||'General')===ttSubjectFilter);
   const wrap=document.getElementById('mustDoList');
   const isToday=selectedTimetableDate===todayStr();
   if(!list.length){wrap.innerHTML=`<div class="empty-state">${isToday?'Aaj':'Is date'} ke liye${ttSubjectFilter!=='All'?' ('+ttSubjectFilter+')':''} koi must-do task add nahi hua.</div>`;return;}
-  wrap.innerHTML=list.map(t=>`
-    <div class="timeslot-row ${t.done?'done':''}">
-      <button class="check-round ${t.done?'on':''}" onclick="toggleMustDo('${t.id}',event)">${t.done?'✓':''}</button>
+  wrap.innerHTML=list.map(t=>{
+    const s=MUSTDO_STATUS_LABEL[t.status]||MUSTDO_STATUS_LABEL.pending;
+    const opts=Object.entries(MUSTDO_STATUS_LABEL).map(([k,v])=>`<option value="${k}" ${t.status===k?'selected':''}>${v.emoji} ${v.name}</option>`).join('');
+    return `
+    <div class="timeslot-row ${t.status==='complete'?'done':''}">
+      <span class="check-round ${s.cls}" style="pointer-events:none;">${s.icon}</span>
       ${t.subject?`<span class="tag">${escapeHtml(t.subject)}</span>`:''}
-      <div style="flex:1;min-width:140px;" class="${t.done?'chapter-name done':'chapter-name'}">${escapeHtml(t.text)}</div>
+      ${t.lecture?`<span class="tag">🎥 ${escapeHtml(t.lecture)}</span>`:''}
+      <div style="flex:1;min-width:140px;" class="${t.status==='complete'?'chapter-name done':'chapter-name'}">${escapeHtml(t.text)}</div>
+      <select class="status-tag-select" style="background:${s.tagBg};color:${s.tagColor};" onchange="setMustDoStatus('${t.id}',this.value,event)">${opts}</select>
       <button class="btn danger small admin-only" onclick="deleteMustDo('${t.id}')">🗑</button>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
-async function toggleMustDo(id,ev){
+async function setMustDoStatus(id,status,ev){
   const key='mustdo:'+selectedTimetableDate;
   const list=await sGet(key,[]);
   const item=list.find(x=>x.id===id); if(!item)return;
-  item.done=!item.done;
+  item.status=status;
+  item.done=status==='complete';
   await sSet(key,list);
-  if(item.done && ev)burstConfetti(ev.clientX,ev.clientY);
+  if(status==='complete'){await logActivity();if(ev)burstConfetti(ev.clientX,ev.clientY);}
   renderMustDo();
 }
 async function deleteMustDo(id){
@@ -1451,6 +1479,46 @@ const SUBJECTS=['Physics','Organic Chemistry','Inorganic Chemistry','Physical Ch
 let activeSubject='Physics';
 function renderSubjTabs(){document.getElementById('subjTabs').innerHTML=SUBJECTS.map(s=>`<button class="subj-btn ${s===activeSubject?'active':''}" onclick="setSubject('${s}')">${s}</button>`).join('');}
 function setSubject(s){activeSubject=s;renderSubjTabs();renderChapters();populateLogChapterSel();renderStudyLog();}
+/* ================= BACKLOG ================= */
+async function addBacklog(){
+  const text=document.getElementById('backlogText').value.trim();
+  const subject=document.getElementById('backlogSubject').value;
+  if(!text){alert('Backlog item likho pehle.');return;}
+  const list=await sGet('backlog:all',[]);
+  list.unshift({id:uid(),text,subject,date:todayStr(),cleared:false,ts:Date.now()});
+  await sSet('backlog:all',list);
+  document.getElementById('backlogText').value='';
+  await logActivity();
+  renderBacklog();
+}
+async function renderBacklog(){
+  const list=await sGet('backlog:all',[]);
+  const wrap=document.getElementById('backlogList');
+  const pending=list.filter(b=>!b.cleared);
+  if(!list.length){wrap.innerHTML='<div class="empty-state">Koi backlog nahi hai — bahut acha! 🎉</div>';return;}
+  wrap.innerHTML=(pending.length?'':'<div class="empty-state">Sab backlog clear ho gaya hai! 🎉</div>')+list.map(b=>`
+    <div class="timeslot-row ${b.cleared?'done':''}" style="${b.cleared?'':'border-color:#e6b3a4;'}">
+      <button class="check-round ${b.cleared?'on':''}" onclick="toggleBacklog('${b.id}',event)">${b.cleared?'✓':''}</button>
+      <span class="tag">${escapeHtml(b.subject)}</span>
+      <div style="flex:1;min-width:140px;" class="${b.cleared?'chapter-name done':'chapter-name'}">${escapeHtml(b.text)}</div>
+      <span style="color:var(--text-soft);font-size:11px;">${new Date(b.date).toLocaleDateString()}</span>
+      <button class="btn danger small admin-only" onclick="deleteBacklog('${b.id}')">🗑</button>
+    </div>`).join('');
+}
+async function toggleBacklog(id,ev){
+  const list=await sGet('backlog:all',[]);
+  const item=list.find(x=>x.id===id); if(!item)return;
+  item.cleared=!item.cleared;
+  await sSet('backlog:all',list);
+  if(item.cleared&&ev)burstConfetti(ev.clientX,ev.clientY);
+  renderBacklog();
+}
+async function deleteBacklog(id){
+  const list=await sGet('backlog:all',[]);
+  await sSet('backlog:all',list.filter(x=>x.id!==id));
+  renderBacklog();
+}
+
 async function addChapter(){
   const name=document.getElementById('chapterName').value.trim();
   const targetLectures=parseInt(document.getElementById('chapterTargetLectures').value)||0;
@@ -1515,22 +1583,83 @@ async function renderChapters(){
       const days=daysBetween(c.startedDate,todayStr());
       daysBadge=`<span class="tag">📅 ${days} din se chal raha hai</span>`;
     }
+    let targetBadge='';
+    if(!c.complete && c.targetDate){
+      const daysLeft=daysBetween(todayStr(),c.targetDate);
+      targetBadge=`<span class="tag" style="background:${daysLeft<0?'#c14a35':'var(--blush)'};color:${daysLeft<0?'#fff':'var(--wine-dark)'};">🎯 Target: ${new Date(c.targetDate).toLocaleDateString()}${daysLeft<0?' (late)':''}</span>`;
+    }
+    const cStatus=c.complete?'complete':(c.current?'ongoing':'pending');
+    const statusOpts=CHAPTER_STATUS_LABEL_LIST.map(([k,v])=>`<option value="${k}" ${cStatus===k?'selected':''}>${v.emoji} ${v.name}</option>`).join('');
     return `
     <div class="chapter-row ${c.complete?'complete':''}">
-      <button class="check-round ${c.complete?'on':''}" onclick="toggleChapterComplete('${c.id}',event)">${c.complete?'✓':''}</button>
-      <div class="chapter-name ${c.complete?'done':''}">${escapeHtml(c.name)} ${c.current?'<span class="tag" style="background:var(--gold);color:#fff;">📖 Currently Studying</span>':''} ${lectureBadge} ${daysBadge}</div>
+      <select class="status-tag-select" style="background:${CHAPTER_STATUS_LABEL[cStatus].tagBg};color:${CHAPTER_STATUS_LABEL[cStatus].tagColor};" onchange="setChapterStatus('${c.id}',this.value,event)">${statusOpts}</select>
+      <div class="chapter-name ${c.complete?'done':''}">${escapeHtml(c.name)} ${lectureBadge} ${daysBadge} ${targetBadge}</div>
       <div class="mini-checks">
         <span class="mini-chip ${c.ncert?'on':''}" onclick="toggleChapterField('${c.id}','ncert')">NCERT</span>
         <span class="mini-chip ${c.notesDone?'on':''}" onclick="toggleChapterField('${c.id}','notesDone')">Notes</span>
         <span class="mini-chip ${c.revised?'on':''}" onclick="toggleChapterField('${c.id}','revised')">Revised</span>
       </div>
-      <button class="btn ghost small" onclick="setCurrentChapter('${c.id}')" title="Mark as currently studying">📌</button>
+      <button class="btn ghost small" onclick="openChapterDates('${c.id}')" title="Start / target completion date">🗓️</button>
       <button class="btn ghost small" onclick="openChapterNotes('${c.id}','formulas','📐 Formulas')">📐</button>
       <button class="btn ghost small" onclick="openChapterNotes('${c.id}','keyPoints','⭐ Key Points')">⭐</button>
       <button class="btn ghost small" onclick="openTopicLog('${c.id}')">📅</button>
       <button class="btn danger small admin-only" onclick="deleteChapter('${c.id}')">🗑</button>
     </div>`;
   }).join('');
+}
+const CHAPTER_STATUS_LABEL={
+  pending:{emoji:'⏳',name:'Pending',tagBg:'var(--blush)',tagColor:'var(--wine-dark)'},
+  ongoing:{emoji:'🌗',name:'Ongoing',tagBg:'var(--gold)',tagColor:'#fff'},
+  complete:{emoji:'✅',name:'Complete',tagBg:'var(--good)',tagColor:'#fff'}
+};
+const CHAPTER_STATUS_LABEL_LIST=Object.entries(CHAPTER_STATUS_LABEL);
+async function setChapterStatus(id,status,ev){
+  const list=await sGet('syllabus:'+activeSubject,[]);
+  const c=list.find(x=>x.id===id); if(!c)return;
+  if(status==='ongoing'){
+    list.forEach(ch=>{ch.current=(ch.id===id);});
+    c.complete=false;c.completedDate=null;
+    if(!c.startedDate)c.startedDate=todayStr();
+    await sSet('currentlyStudying',{subject:activeSubject,name:c.name,ts:Date.now()});
+  }else if(status==='complete'){
+    c.current=false;c.complete=true;
+    c.ncert=true;c.notesDone=true;c.revised=true;
+    c.completedDate=todayStr();
+    if(!c.startedDate)c.startedDate=c.createdDate||todayStr();
+    await logActivity();
+  }else{
+    c.current=false;c.complete=false;c.completedDate=null;
+  }
+  await sSet('syllabus:'+activeSubject,list);
+  if(status==='complete'&&ev)burstConfetti(ev.clientX,ev.clientY);
+  renderChapters();updateHomeStats();
+}
+async function openChapterDates(id){
+  const list=await sGet('syllabus:'+activeSubject,[]);
+  const c=list.find(x=>x.id===id); if(!c)return;
+  document.getElementById('modalBody').innerHTML=`
+    <h3>🗓️ ${escapeHtml(c.name)} — Dates</h3>
+    <div class="row" style="margin-bottom:10px;">
+      <label style="font-size:12.5px;color:var(--text-soft);min-width:140px;">Chapter start date:</label>
+      <input type="date" id="chStartDate" value="${c.startedDate||''}">
+    </div>
+    <div class="row" style="margin-bottom:10px;">
+      <label style="font-size:12.5px;color:var(--text-soft);min-width:140px;">Target completion date:</label>
+      <input type="date" id="chTargetDate" value="${c.targetDate||''}">
+    </div>
+    ${c.completedDate?`<p style="color:var(--good);font-size:12.5px;">✅ Actually completed: ${new Date(c.completedDate).toLocaleDateString()}</p>`:''}
+    <button class="btn" onclick="saveChapterDates('${id}')">💾 Save</button>
+  `;
+  document.getElementById('modalBg').classList.add('show');
+}
+async function saveChapterDates(id){
+  const list=await sGet('syllabus:'+activeSubject,[]);
+  const c=list.find(x=>x.id===id); if(!c)return;
+  c.startedDate=document.getElementById('chStartDate').value||c.startedDate;
+  c.targetDate=document.getElementById('chTargetDate').value||null;
+  await sSet('syllabus:'+activeSubject,list);
+  closeModal();
+  renderChapters();
 }
 async function openChapterNotes(id,field,label){
   const list=await sGet('syllabus:'+activeSubject,[]);
