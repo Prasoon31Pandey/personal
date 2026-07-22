@@ -395,6 +395,7 @@ footer{text-align:center;padding:28px 0;color:var(--text-soft);font-size:12px;}
       <button class="tab-btn" data-tab="timetable">Timetable</button>
       <button class="tab-btn" data-tab="syllabus">Syllabus</button>
       <button class="tab-btn" data-tab="backlog">🔴 Backlog</button>
+      <button class="tab-btn" data-tab="lecturelog">🎥 Lecture Log</button>
       <button class="tab-btn" data-tab="dpp">DPP</button>
       <button class="tab-btn" data-tab="notes">Notes</button>
       <button class="tab-btn" data-tab="ncert">📗 NCERT</button>
@@ -602,10 +603,20 @@ footer{text-align:center;padding:28px 0;color:var(--text-soft);font-size:12px;}
       </div>
     </div>
     <div id="chapterList"></div>
+  </div>
+</section>
 
-    <h3 style="color:var(--wine-dark);margin-top:30px;">🎥 Lecture Log</h3>
-    <p style="color:var(--text-soft);font-size:12.5px;">Kis din kaunsi chapter ka kaunsa lecture liya — chapter se link hoga taaki pending lectures track ho sake.</p>
+<!-- ============ LECTURE LOG ============ -->
+<section class="view" id="lecturelog">
+  <div class="wrap">
+    <div class="section-title"><h2>🎥 Lecture Log</h2><span class="pill-note">Subject-wise, chapter-linked</span></div>
+    <div class="subject-tabs" id="lecLogSubjTabs"></div>
+
+    <div class="card" style="margin-bottom:16px;" id="lecLogSummary"></div>
+
     <div class="add-form" style="margin-bottom:16px;">
+      <h3>Add Lecture Entry</h3>
+      <p style="color:var(--text-soft);font-size:12.5px;margin:0 0 10px;">Kis din kaunsi chapter ka kaunsa lecture liya — chapter se link hoga taaki pending lectures track ho sake.</p>
       <div class="row" style="margin-bottom:8px;">
         <input type="date" id="logDate">
         <select id="logChapterSel"><option value="">-- Chapter choose karo --</option></select>
@@ -1210,8 +1221,9 @@ function switchTab(id){
   const btn=document.querySelector(`.tab-btn[data-tab="${id}"]`); if(btn)btn.classList.add('active');
   window.scrollTo({top:0,behavior:'smooth'});
   if(id==='progress')renderProgressPage();
-  if(id==='syllabus'){populateLogChapterSel();renderStudyLog();}
+  if(id==='syllabus'){}
   if(id==='backlog'){renderBacklogSubjTabs();renderBacklog();renderBacklogLectureSummary();}
+  if(id==='lecturelog'){renderLecLogSubjTabs();populateLogChapterSel();renderStudyLog();renderLecLogSummary();}
   if(id==='us')renderUsPage();
   if(id==='timetable'){if(!selectedTimetableDate)initTimetableDate();renderTtSubjFilterTabs();renderSlots();renderMustDo();}
   if(id==='ncert'){renderNcertSubjTabs();renderNcertBooks();renderReadingLog();populateReadBookSel();}
@@ -1438,8 +1450,26 @@ async function deleteSlot(id){
 }
 
 /* ================= LECTURE LOG (chapter-linked) ================= */
+let activeLecLogSubject='Physics';
+function renderLecLogSubjTabs(){
+  document.getElementById('lecLogSubjTabs').innerHTML=SUBJECTS.map(s=>`<button class="subj-btn ${s===activeLecLogSubject?'active':''}" onclick="setLecLogSubject('${s}')">${s}</button>`).join('');
+}
+function setLecLogSubject(s){activeLecLogSubject=s;renderLecLogSubjTabs();populateLogChapterSel();renderStudyLog();renderLecLogSummary();}
+async function renderLecLogSummary(){
+  const chapters=await sGet('syllabus:'+activeLecLogSubject,[]);
+  const allLogs=await sGet('studylog:all',[]);
+  const box=document.getElementById('lecLogSummary');
+  if(!chapters.length){box.innerHTML=`<span style="color:var(--text-soft);">Is subject mein abhi koi chapter add nahi hua — pehle Syllabus se chapter add karo.</span>`;return;}
+  const rows=chapters.map(c=>{
+    const done=allLogs.filter(l=>l.chapterId===c.id).length;
+    const target=c.targetLectures||0;
+    const pending=target?Math.max(0,target-done):null;
+    return `<span class="tag" style="margin-right:6px;background:${target&&done>=target?'var(--good)':'var(--blush)'};color:${target&&done>=target?'#fff':'var(--wine-dark)'};">${escapeHtml(c.name)}: ${done}${target?'/'+target:''} ${pending?`(${pending} pending)`:''}</span>`;
+  }).join('');
+  box.innerHTML=rows;
+}
 async function populateLogChapterSel(){
-  const list=await sGet('syllabus:'+activeSubject,[]);
+  const list=await sGet('syllabus:'+activeLecLogSubject,[]);
   const sel=document.getElementById('logChapterSel');
   if(!sel)return;
   sel.innerHTML='<option value="">-- Chapter choose karo --</option>'+list.map(c=>`<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
@@ -1451,23 +1481,23 @@ async function addStudyLog(){
   if(!chapterId){alert('Pehle ek chapter choose karo.');return;}
   if(!lecture){alert('Lecture label likho.');return;}
   const list=await sGet('studylog:all',[]);
-  list.unshift({id:uid(),date,subject:activeSubject,chapterId,lecture,ts:Date.now()});
+  list.unshift({id:uid(),date,subject:activeLecLogSubject,chapterId,lecture,ts:Date.now()});
   const ok=await sSet('studylog:all',list);
   if(!ok){alert('Save fail ho gaya.');return;}
   document.getElementById('logLecture').value='';document.getElementById('logDate').value='';
   await logActivity();
   renderStudyLog();
-  renderChapters();
+  renderLecLogSummary();
   burstConfetti(window.innerWidth/2,300);
 }
 async function renderStudyLog(){
   const all=await sGet('studylog:all',[]);
-  const chapters=await sGet('syllabus:'+activeSubject,[]);
+  const chapters=await sGet('syllabus:'+activeLecLogSubject,[]);
   const chapterName=id=>{const c=chapters.find(x=>x.id===id);return c?c.name:'(deleted chapter)';};
-  const list=all.filter(l=>l.subject===activeSubject);
+  const list=all.filter(l=>l.subject===activeLecLogSubject);
   const wrap=document.getElementById('studyLogList');
   if(!list.length){wrap.innerHTML='<div class="empty-state">Is subject ki abhi koi lecture log nahi hui.</div>';return;}
-  wrap.innerHTML=`<div class="card" style="margin-bottom:14px;"><span class="tag">${activeSubject}: ${list.length} lectures logged</span></div>`+list.slice(0,60).map(l=>`
+  wrap.innerHTML=list.slice(0,60).map(l=>`
     <div class="timeslot-row">
       <div class="time-chip">${new Date(l.date).toLocaleDateString([], {day:'2-digit',month:'short'})}</div>
       <span class="tag">${escapeHtml(chapterName(l.chapterId))}</span>
@@ -1479,7 +1509,7 @@ async function deleteStudyLog(id){
   const list=await sGet('studylog:all',[]);
   await sSet('studylog:all',list.filter(l=>l.id!==id));
   renderStudyLog();
-  renderChapters();
+  renderLecLogSummary();
 }
 
 /* ================= SYLLABUS TRACKER ================= */
@@ -3085,8 +3115,9 @@ function refreshCurrentView(key){
   if(activeId==='home')updateHomeStats();
   else if(activeId==='ncert'){renderNcertBooks();renderReadingLog();}
   else if(activeId==='timetable'){renderSlots();renderMustDo();}
-  else if(activeId==='syllabus'){renderChapters();renderStudyLog();}
+  else if(activeId==='syllabus'){renderChapters();}
   else if(activeId==='backlog'){renderBacklog();renderBacklogLectureSummary();}
+  else if(activeId==='lecturelog'){renderStudyLog();renderLecLogSummary();}
   else if(activeId==='dpp')renderDppList();
   else if(activeId==='notes')renderNotesList();
   else if(activeId==='upload')renderFileList();
