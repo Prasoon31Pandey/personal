@@ -400,6 +400,7 @@ footer{text-align:center;padding:28px 0;color:var(--text-soft);font-size:12px;}
       <button class="tab-btn" data-tab="notes">Notes</button>
       <button class="tab-btn" data-tab="ncert">📗 NCERT</button>
       <button class="tab-btn" data-tab="progress">Progress</button>
+      <button class="tab-btn" data-tab="results">📊 Results</button>
       <button class="tab-btn admin-only" data-tab="upload">Upload Center</button>
       <button class="tab-btn" data-tab="test">Weekly Test</button>
       <button class="tab-btn" data-tab="video">Video Call</button>
@@ -730,6 +731,20 @@ footer{text-align:center;padding:28px 0;color:var(--text-soft);font-size:12px;}
       <button class="btn" onclick="addMistake()">+ Add to Notebook</button>
     </div>
     <div id="mistakeList"></div>
+  </div>
+</section>
+
+<!-- ============ RESULTS ============ -->
+<section class="view" id="results">
+  <div class="wrap">
+    <div class="section-title"><h2>📊 Results</h2><span class="pill-note">Har test aur DPP ka poora record</span></div>
+
+    <h3 style="color:var(--wine-dark);">📝 Test Attempts</h3>
+    <div id="resultsTestList" style="margin-bottom:30px;"></div>
+
+    <h3 style="color:var(--wine-dark);">📄 DPP Completion History</h3>
+    <div class="subject-tabs" id="resultsDppSubjTabs"></div>
+    <div id="resultsDppList"></div>
   </div>
 </section>
 
@@ -1221,6 +1236,7 @@ function switchTab(id){
   const btn=document.querySelector(`.tab-btn[data-tab="${id}"]`); if(btn)btn.classList.add('active');
   window.scrollTo({top:0,behavior:'smooth'});
   if(id==='progress')renderProgressPage();
+  if(id==='results')renderResultsPage();
   if(id==='syllabus'){}
   if(id==='backlog'){renderBacklogSubjTabs();renderBacklog();renderBacklogLectureSummary();}
   if(id==='lecturelog'){renderLecLogSubjTabs();populateLogChapterSel();renderStudyLog();renderLecLogSummary();}
@@ -1630,10 +1646,21 @@ async function renderChapters(){
   renderSubjSummary();
   if(!list.length){wrap.innerHTML='<div class="empty-state">Is subject mein abhi koi chapter add nahi hua.</div>';return;}
   wrap.innerHTML=list.map(c=>{
-    const lecturesDone=allLogs.filter(l=>l.chapterId===c.id).length;
-    const lectureBadge=c.targetLectures
-      ? `<span class="tag" style="background:${lecturesDone>=c.targetLectures?'var(--good)':'var(--blush)'};color:${lecturesDone>=c.targetLectures?'#fff':'var(--wine-dark)'};">🎥 ${lecturesDone}/${c.targetLectures}</span>`
-      : (lecturesDone?`<span class="tag">🎥 ${lecturesDone} lectures</span>`:'');
+    const logDone=allLogs.filter(l=>l.chapterId===c.id).length;
+    const doneCount=(typeof c.lecturesDoneManual==='number')?c.lecturesDoneManual:logDone;
+    const total=c.targetLectures||0;
+    const pending=Math.max(0,total-doneCount);
+    const allDone=total>0 && doneCount>=total;
+    const todayCount=(c.doneToday && c.doneToday.date===todayStr())?c.doneToday.count:0;
+    let lectureBadge='';
+    if(total || doneCount){
+      lectureBadge=`<span class="tag" style="cursor:pointer;background:${allDone?'var(--good)':'var(--blush)'};color:${allDone?'#fff':'var(--wine-dark)'};" onclick="editChapterNumber('${c.id}','targetLectures','Total lectures')" title="Click to edit">🎥 Total: ${total}</span>
+        <span class="tag" style="cursor:pointer;background:var(--good);color:#fff;" onclick="editChapterNumber('${c.id}','lecturesDoneManual','Lectures done')" title="Click to edit">✅ Done: ${doneCount}</span>
+        ${pending>0?`<span class="tag" style="background:#c14a35;color:#fff;">⏳ Pending: ${pending}</span>`:''}
+        <span class="tag" style="cursor:pointer;background:var(--gold);color:#fff;" onclick="editChapterToday('${c.id}')" title="Click to edit">📆 Aaj: ${todayCount}</span>`;
+    }else{
+      lectureBadge=`<span class="tag" style="cursor:pointer;" onclick="editChapterNumber('${c.id}','targetLectures','Total lectures')">🎥 + Total lectures set karo</span>`;
+    }
     let daysBadge='';
     if(c.complete && c.completedDate){
       const days=daysBetween(c.startedDate||c.createdDate||c.completedDate,c.completedDate);
@@ -1691,6 +1718,35 @@ async function setChapterStatus(id,status,ev){
   }
   await sSet('syllabus:'+activeSubject,list);
   if(status==='complete'&&ev)burstConfetti(ev.clientX,ev.clientY);
+  renderChapters();updateHomeStats();
+}
+async function editChapterNumber(id,field,label){
+  if(document.body.classList.contains('student-mode')){alert('Sirf Admin edit kar sakta hai.');return;}
+  const list=await sGet('syllabus:'+activeSubject,[]);
+  const c=list.find(x=>x.id===id); if(!c)return;
+  const current=field==='lecturesDoneManual'
+    ? ((typeof c.lecturesDoneManual==='number')?c.lecturesDoneManual:0)
+    : (c[field]||0);
+  const val=prompt(`${label} kitni hai?`,current);
+  if(val===null)return;
+  const num=parseInt(val);
+  if(isNaN(num)||num<0){alert('Sahi number likho.');return;}
+  c[field]=num;
+  await sSet('syllabus:'+activeSubject,list);
+  renderChapters();updateHomeStats();
+}
+async function editChapterToday(id){
+  if(document.body.classList.contains('student-mode')){alert('Sirf Admin edit kar sakta hai.');return;}
+  const list=await sGet('syllabus:'+activeSubject,[]);
+  const c=list.find(x=>x.id===id); if(!c)return;
+  const current=(c.doneToday && c.doneToday.date===todayStr())?c.doneToday.count:0;
+  const val=prompt('Aaj kitne lectures complete hue?',current);
+  if(val===null)return;
+  const num=parseInt(val);
+  if(isNaN(num)||num<0){alert('Sahi number likho.');return;}
+  c.doneToday={date:todayStr(),count:num};
+  await sSet('syllabus:'+activeSubject,list);
+  await logActivity();
   renderChapters();updateHomeStats();
 }
 async function openChapterDates(id){
@@ -1941,6 +1997,7 @@ async function toggleDppDone(id,ev){
   const list=await sGet('dpp:'+activeDppSubject,[]);
   const item=list.find(x=>x.id===id); if(!item)return;
   item.completed=!item.completed;
+  item.completedDate=item.completed?todayStr():null;
   await sSet('dpp:'+activeDppSubject,list);
   if(item.completed){await logActivity();if(ev)burstConfetti(ev.clientX,ev.clientY);}
   renderDppList();updateHomeStats();
@@ -2337,6 +2394,55 @@ async function addMistake(){
   document.getElementById('mistakeQ').value='';document.getElementById('mistakeSol').value='';document.getElementById('mistakeReason').value='';
   renderMistakes();
 }
+/* ================= RESULTS PAGE ================= */
+async function renderResultsPage(){
+  await renderResultsTests();
+  renderResultsDppSubjTabs();
+  await renderResultsDpp();
+}
+async function renderResultsTests(){
+  const results=await sGet('tests:results',[]);
+  const wrap=document.getElementById('resultsTestList');
+  if(!results.length){wrap.innerHTML='<div class="empty-state">Abhi tak koi test/DPP attempt nahi hua.</div>';return;}
+  wrap.innerHTML=results.map(r=>{
+    if(r.oral){
+      return `<div class="file-item">
+        <div class="file-info"><b>🗣️ ${escapeHtml(r.testName)}</b><span>${new Date(r.ts).toLocaleString()} · ${escapeHtml(r.role||'')}</span></div>
+        <div class="file-actions"><span class="tag" style="background:var(--good);color:#fff;">✅ Complete</span></div>
+      </div>`;
+    }
+    const acc=r.accuracy!==undefined?r.accuracy:Math.round((r.score/(r.total||1))*100);
+    return `<div class="file-item">
+      <div class="file-info">
+        <b>${escapeHtml(r.testName)}</b>
+        <span>${new Date(r.ts).toLocaleString()} · ${escapeHtml(r.takenBy||r.role||'')} ${r.subject?'· '+escapeHtml(r.subject):''}</span>
+      </div>
+      <div class="file-actions">
+        <span class="tag" style="background:var(--wine);color:#fff;">Score: ${r.score}/${r.total}</span>
+        <span class="tag" style="background:var(--good);color:#fff;">✅ Correct: ${r.correct!==undefined?r.correct:r.score}</span>
+        ${r.incorrect!==undefined?`<span class="tag" style="background:#c14a35;color:#fff;">❌ Wrong: ${r.incorrect}</span>`:''}
+        ${r.unattempted!==undefined?`<span class="tag" style="background:var(--blush);color:var(--wine-dark);">➖ Unattempted: ${r.unattempted}</span>`:''}
+        <span class="tag" style="background:var(--gold);color:#fff;">🎯 Accuracy: ${acc}%</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+let activeResultsDppSubject='Physics';
+function renderResultsDppSubjTabs(){
+  document.getElementById('resultsDppSubjTabs').innerHTML=SUBJECTS.map(s=>`<button class="subj-btn ${s===activeResultsDppSubject?'active':''}" onclick="setResultsDppSubject('${s}')">${s}</button>`).join('');
+}
+function setResultsDppSubject(s){activeResultsDppSubject=s;renderResultsDppSubjTabs();renderResultsDpp();}
+async function renderResultsDpp(){
+  const list=await sGet('dpp:'+activeResultsDppSubject,[]);
+  const wrap=document.getElementById('resultsDppList');
+  const done=list.filter(d=>d.completed);
+  if(!done.length){wrap.innerHTML='<div class="empty-state">Is subject ki abhi koi DPP complete nahi hui.</div>';return;}
+  wrap.innerHTML=done.map(d=>`
+    <div class="file-item">
+      <div class="file-info"><b>✅ ${escapeHtml(d.title)}</b><span>${d.completedDate?new Date(d.completedDate).toLocaleDateString():'Date pata nahi'}</span></div>
+    </div>`).join('');
+}
+
 async function renderMistakes(onlyBookmarked){
   let list=await sGet('mistakes:all',[]);
   if(onlyBookmarked)list=list.filter(m=>m.bookmarked);
@@ -3123,6 +3229,7 @@ function refreshCurrentView(key){
   else if(activeId==='upload')renderFileList();
   else if(activeId==='test')renderTestList();
   else if(activeId==='progress')renderProgressPage();
+  else if(activeId==='results')renderResultsPage();
   else if(activeId==='us')renderUsPage();
   updateHomeStats();
 }
