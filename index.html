@@ -2437,10 +2437,62 @@ async function renderResultsDpp(){
   const wrap=document.getElementById('resultsDppList');
   const done=list.filter(d=>d.completed);
   if(!done.length){wrap.innerHTML='<div class="empty-state">Is subject ki abhi koi DPP complete nahi hui.</div>';return;}
-  wrap.innerHTML=done.map(d=>`
+  wrap.innerHTML=done.map(d=>{
+    const m=d.manualScore;
+    const marksHtml=m
+      ? `<span class="tag" style="background:var(--wine);color:#fff;">Marks: ${m.scored}/${m.total}</span>
+         <span class="tag" style="background:var(--good);color:#fff;">✅ Correct: ${m.correct}</span>
+         <span class="tag" style="background:#c14a35;color:#fff;">❌ Wrong: ${m.wrong}</span>
+         <span class="tag">📝 Attempted: ${m.attempted}</span>
+         <span class="tag">⏭ Skipped: ${m.skipped}</span>`
+      : `<span style="color:var(--text-soft);font-size:11.5px;">Marks add nahi hue abhi.</span>`;
+    return `
     <div class="file-item">
       <div class="file-info"><b>✅ ${escapeHtml(d.title)}</b><span>${d.completedDate?new Date(d.completedDate).toLocaleDateString():'Date pata nahi'}</span></div>
-    </div>`).join('');
+      <div class="file-actions" style="flex-direction:column;align-items:flex-end;gap:6px;">
+        <div class="row">${marksHtml}</div>
+        <button class="btn ghost small admin-only" onclick="openDppMarks('${d.id}')">${m?'✏️ Edit Marks':'📝 Add Marks'}</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+async function openDppMarks(id){
+  const list=await sGet('dpp:'+activeResultsDppSubject,[]);
+  const d=list.find(x=>x.id===id); if(!d)return;
+  const m=d.manualScore||{total:'',scored:'',correct:'',wrong:'',attempted:'',skipped:''};
+  document.getElementById('modalBody').innerHTML=`
+    <h3>📝 Marks — ${escapeHtml(d.title)}</h3>
+    <div class="row" style="margin-bottom:10px;">
+      <div><label style="font-size:11.5px;color:var(--text-soft);">Total Marks</label><br><input type="number" id="mkTotal" value="${m.total}" style="width:120px;"></div>
+      <div><label style="font-size:11.5px;color:var(--text-soft);">Marks Scored</label><br><input type="number" id="mkScored" value="${m.scored}" style="width:120px;"></div>
+    </div>
+    <div class="row" style="margin-bottom:10px;">
+      <div><label style="font-size:11.5px;color:var(--text-soft);">Correct</label><br><input type="number" id="mkCorrect" value="${m.correct}" style="width:120px;"></div>
+      <div><label style="font-size:11.5px;color:var(--text-soft);">Wrong</label><br><input type="number" id="mkWrong" value="${m.wrong}" style="width:120px;"></div>
+    </div>
+    <div class="row" style="margin-bottom:14px;">
+      <div><label style="font-size:11.5px;color:var(--text-soft);">Attempted</label><br><input type="number" id="mkAttempted" value="${m.attempted}" style="width:120px;"></div>
+      <div><label style="font-size:11.5px;color:var(--text-soft);">Skipped</label><br><input type="number" id="mkSkipped" value="${m.skipped}" style="width:120px;"></div>
+    </div>
+    <button class="btn" onclick="saveDppMarks('${id}')">💾 Save Marks</button>
+  `;
+  document.getElementById('modalBg').classList.add('show');
+}
+async function saveDppMarks(id){
+  const list=await sGet('dpp:'+activeResultsDppSubject,[]);
+  const d=list.find(x=>x.id===id); if(!d)return;
+  const num=v=>{const n=parseInt(v);return isNaN(n)?0:n;};
+  d.manualScore={
+    total:num(document.getElementById('mkTotal').value),
+    scored:num(document.getElementById('mkScored').value),
+    correct:num(document.getElementById('mkCorrect').value),
+    wrong:num(document.getElementById('mkWrong').value),
+    attempted:num(document.getElementById('mkAttempted').value),
+    skipped:num(document.getElementById('mkSkipped').value)
+  };
+  await sSet('dpp:'+activeResultsDppSubject,list);
+  closeModal();
+  renderResultsDpp();
 }
 
 async function renderMistakes(onlyBookmarked){
